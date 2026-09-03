@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Ledger — daily tracker</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/sql-wasm.js"></script>
+<style>
+  :root{
+    --paper:#F4F5F7;
+    --panel:#FFFFFF;
+    --ink:#14181F;
+    --ink-soft:#5B6472;
+    --line:#E2E4E8;
+    --teal:#0F6B5C;
+    --teal-soft:#E4F0EE;
+    --gold:#B08947;
+    --gold-soft:#F6EFE1;
+    --red:#A23B2E;
+    --red-soft:#F7E9E6;
+    --mono:'JetBrains Mono','SFMono-Regular',Consolas,monospace;
+    --sans:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+  }
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:14px;}
+  #app{display:flex;min-height:100vh;}
+
+  /* sidebar */
+  #nav{width:180px;flex-shrink:0;background:var(--panel);border-right:1px solid var(--line);padding:24px 0;display:flex;flex-direction:column;}
+  #nav .brand{padding:0 20px 20px 20px;border-bottom:1px solid var(--line);margin-bottom:8px;}
+  #nav .brand .mark{font-family:var(--mono);font-weight:700;color:var(--teal);font-size:15px;}
+  #nav .brand .sub{color:var(--ink-soft);font-size:11.5px;margin-top:2px;}
+  #nav button{all:unset;cursor:pointer;padding:11px 20px;font-size:13.5px;color:var(--ink-soft);border-left:2px solid transparent;}
+  #nav button:hover{color:var(--ink);background:var(--paper);}
+  #nav button.active{color:var(--teal);border-left-color:var(--teal);background:var(--teal-soft);font-weight:600;}
+  #nav .foot{margin-top:auto;padding:14px 20px 0 20px;color:var(--ink-soft);font-size:11px;line-height:1.5;border-top:1px solid var(--line);}
+  #savestate{font-family:var(--mono);}
+
+  main{flex:1;padding:32px 40px;max-width:920px;}
+  h1{font-size:19px;margin:0 0 4px 0;font-weight:700;}
+  .lede{color:var(--ink-soft);font-size:13px;margin:0 0 24px 0;}
+  .view{display:none;}
+  .view.active{display:block;}
+
+  /* forms */
+  .row{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;}
+  input,textarea,select{font-family:var(--sans);font-size:13.5px;border:1px solid var(--line);background:var(--panel);border-radius:6px;padding:9px 11px;color:var(--ink);}
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--teal);}
+  textarea{width:100%;resize:vertical;min-height:64px;font-family:var(--sans);}
+  button.primary{all:unset;cursor:pointer;background:var(--teal);color:#fff;padding:9px 16px;border-radius:6px;font-size:13.5px;font-weight:600;}
+  button.primary:hover{background:#0c5a4d;}
+  button.ghost{all:unset;cursor:pointer;color:var(--ink-soft);padding:6px 10px;font-size:12.5px;border-radius:5px;}
+  button.ghost:hover{background:var(--paper);color:var(--red);}
+
+  /* notes */
+  .note{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 16px;margin-bottom:10px;}
+  .note .meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+  .note .date{font-family:var(--mono);font-size:11px;color:var(--ink-soft);}
+  .note .text{white-space:pre-wrap;line-height:1.5;}
+  .note.pinned{border-left:3px solid var(--gold);}
+  .empty{color:var(--ink-soft);font-size:13px;padding:20px 0;}
+
+  /* expenses */
+  #exp-form input{flex:1;min-width:110px;}
+  table{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line);border-radius:8px;overflow:hidden;}
+  thead th{text-align:left;font-size:11px;color:var(--ink-soft);text-transform:none;font-weight:600;padding:10px 14px;border-bottom:1px solid var(--line);}
+  tbody td{padding:10px 14px;border-bottom:1px solid var(--line);font-size:13.5px;}
+  tbody tr:last-child td{border-bottom:none;}
+  td.amt,th.amt{font-family:var(--mono);text-align:right;}
+  .cat-pill{background:var(--gold-soft);color:var(--gold);padding:2px 8px;border-radius:20px;font-size:11.5px;font-weight:600;}
+  .summary{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 18px;min-width:130px;}
+  .stat .num{font-family:var(--mono);font-size:20px;font-weight:700;}
+  .stat .lbl{color:var(--ink-soft);font-size:11.5px;margin-top:2px;}
+  .bars{margin-top:22px;}
+  .bar-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:12.5px;}
+  .bar-row .cat{width:90px;flex-shrink:0;color:var(--ink-soft);}
+  .bar-track{flex:1;background:var(--paper);border-radius:4px;height:10px;overflow:hidden;}
+  .bar-fill{height:100%;background:var(--teal);border-radius:4px;}
+  .bar-row .val{font-family:var(--mono);width:64px;text-align:right;flex-shrink:0;}
+
+  /* sql console */
+  #sql-box{width:100%;min-height:90px;font-family:var(--mono);font-size:13px;}
+  #sql-run{margin-top:10px;}
+  #sql-result{margin-top:16px;overflow-x:auto;}
+  #sql-err{color:var(--red);background:var(--red-soft);border-radius:6px;padding:10px 14px;margin-top:12px;font-family:var(--mono);font-size:12.5px;display:none;}
+  .hint{color:var(--ink-soft);font-size:12px;margin-top:10px;line-height:1.6;}
+  .hint code{background:var(--paper);padding:1px 5px;border-radius:4px;font-family:var(--mono);}
+</style>
+</head>
+<body>
+<div id="app">
+  <nav id="nav">
+    <div class="brand">
+      <div class="mark">ledger.db</div>
+      <div class="sub">daily tracker</div>
+    </div>
+    <button data-view="notes" class="active">Notes</button>
+    <button data-view="expenses">Expenses</button>
+    <button data-view="sql">SQL console</button>
+    <div class="foot">status: <span id="savestate">loading…</span></div>
+  </nav>
+
+  <main>
+    <div class="view active" id="view-notes">
+      <h1>Notes</h1>
+      <p class="lede">Quick daily notes, backed by a real SQLite table.</p>
+      <div class="row" style="flex-direction:column;align-items:stretch;">
+        <textarea id="note-input" placeholder="Write a note…"></textarea>
+        <div class="row" style="margin:10px 0 0 0;">
+          <label style="display:flex;align-items:center;gap:6px;color:var(--ink-soft);font-size:12.5px;">
+            <input type="checkbox" id="note-pin" style="width:auto;"> pin
+          </label>
+          <button class="primary" id="note-add">Add note</button>
+        </div>
+      </div>
+      <div id="notes-list"></div>
+    </div>
+
+    <div class="view" id="view-expenses">
+      <h1>Expenses</h1>
+      <p class="lede">Log spend, see totals by category.</p>
+      <div id="exp-summary" class="summary"></div>
+      <div class="row" id="exp-form">
+        <input type="date" id="exp-date">
+        <input type="text" id="exp-cat" placeholder="Category (e.g. food)">
+        <input type="text" id="exp-desc" placeholder="Description" style="flex:2;">
+        <input type="number" id="exp-amt" placeholder="Amount" step="0.01">
+        <button class="primary" id="exp-add">Add</button>
+      </div>
+      <table>
+        <thead><tr><th>Date</th><th>Category</th><th>Description</th><th class="amt">Amount</th><th></th></tr></thead>
+        <tbody id="exp-rows"></tbody>
+      </table>
+      <div class="bars" id="exp-bars"></div>
+    </div>
+
+    <div class="view" id="view-sql">
+      <h1>SQL console</h1>
+      <p class="lede">Query <code style="font-family:var(--mono);">notes</code> and <code style="font-family:var(--mono);">expenses</code> directly.</p>
+      <textarea id="sql-box" spellcheck="false">SELECT category, SUM(amount) AS total FROM expenses GROUP BY category ORDER BY total DESC;</textarea>
+      <button class="primary" id="sql-run">Run query</button>
+      <div id="sql-err"></div>
+      <div id="sql-result"></div>
+      <div class="hint">Schema — <code>notes(id, content, created_at, pinned)</code> · <code>expenses(id, date, category, description, amount)</code>. Any valid SQL runs, including UPDATE/DELETE.</div>
+    </div>
+  </main>
+</div>
+
+<script>
+let db, SQL;
+const $ = s => document.querySelector(s);
+const saveState = $('#savestate');
+
+function setSaveState(t){ saveState.textContent = t; }
+
+async function initDB(){
+  SQL = await initSqlJs({ locateFile: f => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/${f}` });
+  let loaded = false;
+  try{
+    const rec = await window.storage.get('db-blob', false);
+    if(rec && rec.value){
+      const bin = atob(rec.value);
+      const bytes = new Uint8Array(bin.length);
+      for(let i=0;i<bin.length;i++) bytes[i] = bin.charCodeAt(i);
+      db = new SQL.Database(bytes);
+      loaded = true;
+    }
+  }catch(e){ /* no existing db */ }
+  if(!loaded){
+    db = new SQL.Database();
+    db.run(`
+      CREATE TABLE notes(id INTEGER PRIMARY KEY AUTOINCREMENT, content TEXT NOT NULL, created_at TEXT NOT NULL, pinned INTEGER DEFAULT 0);
+      CREATE TABLE expenses(id INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT NOT NULL, category TEXT NOT NULL, description TEXT, amount REAL NOT NULL);
+    `);
+  }
+  renderNotes();
+  renderExpenses();
+  setSaveState('ready');
+}
+
+async function persist(){
+  setSaveState('saving…');
+  try{
+    const bytes = db.export();
+    let bin = '';
+    for(let i=0;i<bytes.length;i++) bin += String.fromCharCode(bytes[i]);
+    const b64 = btoa(bin);
+    await window.storage.set('db-blob', b64, false);
+    setSaveState('saved');
+  }catch(e){
+    setSaveState('save failed');
+    console.error(e);
+  }
+}
+
+function q(sql, params=[]){
+  const res = db.exec(sql, params);
+  if(!res.length) return [];
+  const {columns, values} = res[0];
+  return values.map(row => Object.fromEntries(row.map((v,i)=>[columns[i], v])));
+}
+
+// ---------- nav ----------
+document.querySelectorAll('#nav button[data-view]').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('#nav button[data-view]').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    btn.classList.add('active');
+    $('#view-'+btn.dataset.view).classList.add('active');
+  });
+});
+
+// ---------- notes ----------
+function renderNotes(){
+  const rows = q('SELECT * FROM notes ORDER BY pinned DESC, id DESC');
+  const list = $('#notes-list');
+  if(!rows.length){ list.innerHTML = '<div class="empty">No notes yet. Write your first one above.</div>'; return; }
+  list.innerHTML = rows.map(n => `
+    <div class="note ${n.pinned ? 'pinned' : ''}">
+      <div class="meta">
+        <span class="date">${n.created_at}</span>
+        <button class="ghost" onclick="deleteNote(${n.id})">delete</button>
+      </div>
+      <div class="text"></div>
+    </div>
+  `).join('');
+  // set text safely (avoid HTML injection from note content)
+  list.querySelectorAll('.note').forEach((el,i)=>{ el.querySelector('.text').textContent = rows[i].content; });
+}
+window.deleteNote = function(id){
+  db.run('DELETE FROM notes WHERE id = ?', [id]);
+  renderNotes(); persist();
+};
+$('#note-add').addEventListener('click', ()=>{
+  const val = $('#note-input').value.trim();
+  if(!val) return;
+  const pinned = $('#note-pin').checked ? 1 : 0;
+  const now = new Date().toISOString().slice(0,16).replace('T',' ');
+  db.run('INSERT INTO notes(content, created_at, pinned) VALUES (?,?,?)', [val, now, pinned]);
+  $('#note-input').value=''; $('#note-pin').checked=false;
+  renderNotes(); persist();
+});
+
+// ---------- expenses ----------
+$('#exp-date').valueAsDate = new Date();
+function renderExpenses(){
+  const rows = q('SELECT * FROM expenses ORDER BY date DESC, id DESC');
+  const rowsEl = $('#exp-rows');
+  rowsEl.innerHTML = rows.length ? rows.map(r=>`
+    <tr>
+      <td class="mono">${r.date}</td>
+      <td><span class="cat-pill"></span></td>
+      <td class="desc"></td>
+      <td class="amt">₹${Number(r.amount).toFixed(2)}</td>
+      <td><button class="ghost" onclick="deleteExp(${r.id})">delete</button></td>
+    </tr>`).join('') : `<tr><td colspan="5" class="empty">No expenses logged yet.</td></tr>`;
+  rowsEl.querySelectorAll('tr').forEach((tr,i)=>{
+    if(!rows[i]) return;
+    tr.querySelector('.cat-pill').textContent = rows[i].category;
+    tr.querySelector('.desc').textContent = rows[i].description || '—';
+  });
+
+  // summary
+  const total = q('SELECT COALESCE(SUM(amount),0) AS t FROM expenses')[0].t;
+  const thisMonth = q(`SELECT COALESCE(SUM(amount),0) AS t FROM expenses WHERE strftime('%Y-%m', date) = strftime('%Y-%m','now')`)[0].t;
+  const count = q('SELECT COUNT(*) AS c FROM expenses')[0].c;
+  $('#exp-summary').innerHTML = `
+    <div class="stat"><div class="num">₹${Number(total).toFixed(2)}</div><div class="lbl">total logged</div></div>
+    <div class="stat"><div class="num">₹${Number(thisMonth).toFixed(2)}</div><div class="lbl">this month</div></div>
+    <div class="stat"><div class="num">${count}</div><div class="lbl">entries</div></div>
+  `;
+
+  // by category bars
+  const byCat = q('SELECT category, SUM(amount) AS t FROM expenses GROUP BY category ORDER BY t DESC');
+  const max = byCat.length ? Math.max(...byCat.map(c=>c.t)) : 1;
+  $('#exp-bars').innerHTML = byCat.length ? byCat.map(c=>`
+    <div class="bar-row">
+      <div class="cat"></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${(c.t/max*100).toFixed(1)}%"></div></div>
+      <div class="val">₹${Number(c.t).toFixed(2)}</div>
+    </div>
+  `).join('') : '';
+  document.querySelectorAll('#exp-bars .cat').forEach((el,i)=>{ el.textContent = byCat[i].category; });
+}
+window.deleteExp = function(id){
+  db.run('DELETE FROM expenses WHERE id = ?', [id]);
+  renderExpenses(); persist();
+};
+$('#exp-add').addEventListener('click', ()=>{
+  const date = $('#exp-date').value;
+  const cat = $('#exp-cat').value.trim();
+  const desc = $('#exp-desc').value.trim();
+  const amt = parseFloat($('#exp-amt').value);
+  if(!date || !cat || isNaN(amt)) return;
+  db.run('INSERT INTO expenses(date, category, description, amount) VALUES (?,?,?,?)', [date, cat, desc, amt]);
+  $('#exp-cat').value=''; $('#exp-desc').value=''; $('#exp-amt').value='';
+  renderExpenses(); persist();
+});
+
+// ---------- sql console ----------
+$('#sql-run').addEventListener('click', ()=>{
+  const sql = $('#sql-box').value.trim();
+  const errEl = $('#sql-err');
+  const resEl = $('#sql-result');
+  errEl.style.display='none'; resEl.innerHTML='';
+  if(!sql) return;
+  try{
+    const res = db.exec(sql);
+    if(!res.length){
+      resEl.innerHTML = '<div class="empty">Query ran, no rows returned.</div>';
+    } else {
+      const {columns, values} = res[0];
+      resEl.innerHTML = `<table><thead><tr>${columns.map(c=>`<th>${c}</th>`).join('')}</tr></thead>
+        <tbody>${values.map(row=>`<tr>${row.map(v=>`<td>${v===null?'∅':v}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+    }
+    renderNotes(); renderExpenses(); persist();
+  }catch(e){
+    errEl.textContent = e.message;
+    errEl.style.display = 'block';
+  }
+});
+
+initDB();
+</script>
+</body>
+</html>
+
+///////SQL SIDE QUEST LESSSGOOOOOOO////
