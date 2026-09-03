@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>PMO Tracker</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/sql-wasm.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+  :root{
+    --bg:#0B1120; --panel:#121A2E; --panel2:#161F38; --line:#232D48;
+    --text:#E9EDF7; --sub:#8C96B0;
+    --violet:#8B5CF6; --violet-soft:rgba(139,92,246,.14);
+    --cyan:#38BDF8;   --cyan-soft:rgba(56,189,248,.14);
+    --amber:#FBBF24;  --amber-soft:rgba(251,191,36,.14);
+    --rose:#FB7185;   --rose-soft:rgba(251,113,133,.14);
+    --emerald:#34D399;--emerald-soft:rgba(52,211,153,.14);
+    --sans:'Space Grotesk',sans-serif; --mono:'JetBrains Mono',monospace;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:
+    radial-gradient(1100px 500px at 90% -10%, rgba(139,92,246,.14), transparent 60%),
+    radial-gradient(900px 500px at -10% 20%, rgba(56,189,248,.09), transparent 60%),
+    var(--bg); color:var(--text); font-family:var(--sans);}
+  #app{display:flex;min-height:100vh;}
+
+  /* sidebar */
+  #side{width:230px;flex-shrink:0;background:var(--panel);border-right:1px solid var(--line);padding:20px 0;display:flex;flex-direction:column;}
+  #side .brand{padding:0 18px 16px;border-bottom:1px solid var(--line);margin-bottom:10px;}
+  #side .brand b{font-size:15px;}
+  #side .brand .sub{color:var(--sub);font-size:11.5px;margin-top:2px;}
+  #side .navbtn{all:unset;cursor:pointer;display:block;width:100%;padding:10px 18px;font-size:13px;color:var(--sub);border-left:2px solid transparent;}
+  #side .navbtn:hover{color:var(--text);background:var(--panel2);}
+  #side .navbtn.active{color:var(--violet);border-left-color:var(--violet);background:var(--violet-soft);font-weight:600;}
+  #side .section-lbl{padding:14px 18px 6px;font-size:10.5px;letter-spacing:.06em;color:var(--sub);text-transform:uppercase;}
+  #proj-list .navbtn{display:flex;align-items:center;gap:8px;}
+  #proj-list .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+  #add-proj{padding:10px 18px;}
+  #add-proj input,#add-proj select{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--text);font-size:12px;padding:7px 9px;border-radius:6px;margin-bottom:6px;font-family:var(--sans);}
+  #add-proj button{all:unset;cursor:pointer;width:100%;text-align:center;background:var(--emerald);color:#08201a;font-weight:700;font-size:12px;padding:7px;border-radius:6px;}
+
+  main{flex:1;padding:28px 34px;max-width:1100px;}
+  .ph{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:10px;}
+  .ph h1{font-size:21px;margin:0;font-weight:700;}
+  .pill{display:inline-block;font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600;}
+  .lede{color:var(--sub);font-size:13px;margin:2px 0 22px;}
+
+  /* tabs */
+  #tabs{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:0;}
+  #tabs button{all:unset;cursor:pointer;padding:8px 14px;font-size:12.5px;color:var(--sub);border-bottom:2px solid transparent;}
+  #tabs button.active{color:var(--text);font-weight:600;}
+
+  /* overview */
+  .stat-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:24px;}
+  .stat-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;}
+  .stat-card .num{font-family:var(--mono);font-size:22px;font-weight:700;}
+  .stat-card .lbl{color:var(--sub);font-size:11px;margin-top:2px;}
+
+  /* add row form */
+  .add-row{display:flex;gap:8px;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:16px;}
+  .add-row input,.add-row select{background:var(--panel2);border:1px solid var(--line);color:var(--text);font-size:12.5px;padding:8px 10px;border-radius:7px;font-family:var(--sans);}
+  .add-row button{all:unset;cursor:pointer;background:var(--violet);color:#fff;font-weight:600;font-size:12.5px;padding:8px 16px;border-radius:7px;margin-left:auto;}
+  .add-row button:hover{background:#7c4ff0;}
+
+  /* generic table */
+  table{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden;}
+  thead th{text-align:left;font-size:10.5px;color:var(--sub);text-transform:uppercase;letter-spacing:.03em;font-weight:600;padding:9px 12px;border-bottom:1px solid var(--line);}
+  tbody td{padding:9px 12px;border-bottom:1px solid var(--line);font-size:12.8px;vertical-align:middle;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:hover{background:var(--panel2);}
+  select.status-cell{background:var(--panel2);border:1px solid var(--line);color:var(--text);font-size:11.5px;padding:4px 7px;border-radius:6px;font-family:var(--sans);}
+  .del-btn{all:unset;cursor:pointer;color:var(--sub);font-size:15px;}
+  .del-btn:hover{color:var(--rose);}
+  .empty{color:var(--sub);font-size:12.5px;padding:18px 4px;}
+
+  /* my day */
+  .day-item{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--violet);border-radius:10px;padding:12px 14px;margin-bottom:8px;}
+  .day-item .kind{font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--sub);width:70px;flex-shrink:0;}
+  .day-item .title{flex:1;font-size:13px;}
+  .day-item .proj{font-size:11px;color:var(--sub);}
+  .day-item .when{font-family:var(--mono);font-size:11px;flex-shrink:0;}
+  .day-item.overdue{border-left-color:var(--rose);}
+  .day-item.overdue .when{color:var(--rose);}
+
+  footer{color:var(--sub);font-size:11px;font-family:var(--mono);margin-top:28px;}
+</style>
+</head>
+<body>
+<div id="app">
+  <nav id="side">
+    <div class="brand"><b>PMO Tracker</b><div class="sub">daily work, one place</div></div>
+    <button class="navbtn active" id="nav-myday">☀ My Day</button>
+    <div class="section-lbl">Projects</div>
+    <div id="proj-list"></div>
+    <div id="add-proj">
+      <input id="np-name" placeholder="New project name">
+      <select id="np-cat">
+        <option value="strategy">Strategy</option>
+        <option value="delivery">Delivery</option>
+        <option value="ops">Ops</option>
+        <option value="reporting">Reporting</option>
+      </select>
+      <button id="np-add">+ Add project</button>
+    </div>
+  </nav>
+
+  <main id="main"></main>
+</div>
+
+<script>
+let db, SQL, currentProjectId = null, currentTab = 'overview', view = 'myday';
+const $ = s => document.querySelector(s);
+const CAT_COLOR = { strategy:'violet', delivery:'cyan', ops:'amber', reporting:'rose' };
+const PALETTE = ['violet','cyan','amber','rose','emerald'];
+
+const TRACKERS = {
+  milestones: { label:'Milestones', dateField:'due_date',
+    columns:[
+      {key:'title', label:'Milestone', type:'text', ph:'e.g. Phase 1 sign-off'},
+      {key:'due_date', label:'Due', type:'date'},
+      {key:'owner', label:'Owner', type:'text', ph:'Owner'},
+      {key:'status', label:'Status', type:'select', options:['Not started','In progress','At risk','Done']}
+    ]},
+  work_items: { label:'Deliverables / Work Items', dateField:'due_date',
+    columns:[
+      {key:'title', label:'Item', type:'text', ph:'e.g. UAT test plan'},
+      {key:'type', label:'Type', type:'select', options:['Feature','Report','Config','Training','Migration']},
+      {key:'owner', label:'Owner', type:'text', ph:'Owner'},
+      {key:'due_date', label:'Due', type:'date'},
+      {key:'status', label:'Status', type:'select', options:['To do','In progress','Review','Done']}
+    ]},
+  requests: { label:'Support & Service Requests', dateField:'date',
+    columns:[
+      {key:'title', label:'Request', type:'text', ph:'e.g. Access request'},
+      {key:'type', label:'Type', type:'select', options:['Support','Service request','Incident']},
+      {key:'priority', label:'Priority', type:'select', options:['Low','Medium','High','Critical']},
+      {key:'requester', label:'Requester', type:'text', ph:'Requester'},
+      {key:'date', label:'Date', type:'date'},
+      {key:'status', label:'Status', type:'select', options:['Open','In progress','Resolved','Closed']}
+    ]},
+  docs: { label:'Internal Documentation', dateField:'updated_at',
+    columns:[
+      {key:'title', label:'Document', type:'text', ph:'e.g. Onboarding SOP'},
+      {key:'category', label:'Category', type:'select', options:['SOP','Design','Meeting notes','Policy','Guide']},
+      {key:'owner', label:'Owner', type:'text', ph:'Owner'},
+      {key:'updated_at', label:'Updated', type:'date'},
+      {key:'link', label:'Link', type:'text', ph:'URL (optional)'}
+    ]},
+  raid: { label:'RAID Log', dateField:null,
+    columns:[
+      {key:'type', label:'Type', type:'select', options:['Risk','Assumption','Issue','Dependency']},
+      {key:'description', label:'Description', type:'text', ph:'Describe it', wide:true},
+      {key:'owner', label:'Owner', type:'text', ph:'Owner'},
+      {key:'impact', label:'Impact', type:'select', options:['Low','Medium','High']},
+      {key:'status', label:'Status', type:'select', options:['Open','Mitigated','Closed']}
+    ]}
+};
+const OPEN_TERMS = new Set(['Not started','In progress','At risk','To do','Review','Open']);
+
+// ---------------- DB ----------------
+async function initDB(){
+  SQL = await initSqlJs({ locateFile: f => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/${f}` });
+  let loaded = false;
+  try{
+    const rec = await window.storage.get('pmo-db', false);
+    if(rec && rec.value){
+      const bin = atob(rec.value);
+      const bytes = new Uint8Array(bin.length);
+      for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
+      db = new SQL.Database(bytes);
+      loaded = true;
+    }
+  }catch(e){}
+  if(!loaded){
+    db = new SQL.Database();
+    db.run(`
+      CREATE TABLE projects(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, category TEXT, color TEXT, created_at TEXT);
+      CREATE TABLE milestones(id INTEGER PRIMARY KEY AUTOINCREMENT, project_id INTEGER, title TEXT, due_date TEXT, owner TEXT, status TEXT);
+      CREATE TABLE work_items(id INTEGER PRIMARY KEY AUTOINCREMENT, project_id INTEGER, title TEXT, type TEXT, owner TEXT, due_date TEXT, status TEXT);
+      CREATE TABLE requests(id INTEGER PRIMARY KEY AUTOINCREMENT, project_id INTEGER, title TEXT, type TEXT, priority TEXT, requester TEXT, date TEXT, status TEXT);
+      CREATE TABLE docs(id INTEGER PRIMARY KEY AUTOINCREMENT, project_id INTEGER, title TEXT, category TEXT, owner TEXT, updated_at TEXT, link TEXT);
+      CREATE TABLE raid(id INTEGER PRIMARY KEY AUTOINCREMENT, project_id INTEGER, type TEXT, description TEXT, owner TEXT, impact TEXT, status TEXT);
+    `);
+    db.run(`INSERT INTO projects(name,category,color,created_at) VALUES ('BI Platform Migration','delivery','cyan',date('now'))`);
+    const pid = q('SELECT last_insert_rowid() AS id')[0].id;
+    db.run(`INSERT INTO milestones(project_id,title,due_date,owner,status) VALUES (?,?,?,?,?)`,[pid,'Requirements sign-off','2026-09-10','You','In progress']);
+    db.run(`INSERT INTO work_items(project_id,title,type,owner,due_date,status) VALUES (?,?,?,?,?,?)`,[pid,'Draft migration runbook','Report','You','2026-09-06','To do']);
+    db.run(`INSERT INTO requests(project_id,title,type,priority,requester,date,status) VALUES (?,?,?,?,?,?,?)`,[pid,'Grant read access to staging DB','Support','Medium','Finance team','2026-09-03','Open']);
+    db.run(`INSERT INTO raid(project_id,type,description,owner,impact,status) VALUES (?,?,?,?,?,?)`,[pid,'Risk','Vendor delivery slip could push go-live','You','High','Open']);
+  }
+  currentProjectId = q('SELECT id FROM projects ORDER BY id LIMIT 1')[0]?.id || null;
+  renderSidebar();
+  renderMain();
+}
+async function persist(){
+  try{
+    const bytes = db.export();
+    let bin=''; for(let i=0;i<bytes.length;i++) bin+=String.fromCharCode(bytes[i]);
+    await window.storage.set('pmo-db', btoa(bin), false);
+  }catch(e){ console.error(e); }
+}
+function q(sql, params=[]){
+  const res = db.exec(sql, params);
+  if(!res.length) return [];
+  const {columns, values} = res[0];
+  return values.map(r=>Object.fromEntries(r.map((v,i)=>[columns[i], v])));
+}
+function esc(s){ const d=document.createElement('div'); d.textContent=s??''; return d.innerHTML; }
+
+// ---------------- sidebar ----------------
+function renderSidebar(){
+  const projects = q('SELECT * FROM projects ORDER BY id');
+  $('#proj-list').innerHTML = projects.map(p=>`
+    <button class="navbtn ${view==='project' && p.id===currentProjectId ? 'active':''}" onclick="selectProject(${p.id})">
+      <span class="dot" style="background:var(--${p.color});"></span><span></span>
+    </button>`).join('');
+  $('#proj-list').querySelectorAll('.navbtn span:nth-child(2)').forEach((el,i)=> el.textContent = projects[i].name);
+  $('#nav-myday').classList.toggle('active', view==='myday');
+}
+window.selectProject = function(id){ currentProjectId = id; view='project'; currentTab='overview'; renderSidebar(); renderMain(); };
+$('#nav-myday').addEventListener('click', ()=>{ view='myday'; renderSidebar(); renderMain(); });
+$('#np-add').addEventListener('click', ()=>{
+  const name = $('#np-name').value.trim();
+  const cat = $('#np-cat').value;
+  if(!name) return;
+  const color = CAT_COLOR[cat];
+  db.run('INSERT INTO projects(name,category,color,created_at) VALUES (?,?,?,date(\'now\'))',[name,cat,color]);
+  currentProjectId = q('SELECT last_insert_rowid() AS id')[0].id;
+  view='project'; currentTab='overview';
+  $('#np-name').value='';
+  renderSidebar(); renderMain(); persist();
+});
+
+// ---------------- main router ----------------
+function renderMain(){
+  if(view==='myday') return renderMyDay();
+  return renderProject();
+}
+
+// ---------------- My Day ----------------
+function renderMyDay(){
+  const today = new Date().toISOString().slice(0,10);
+  const projMap = Object.fromEntries(q('SELECT * FROM projects').map(p=>[p.id,p]));
+  const items = [];
+  q(`SELECT * FROM milestones WHERE status!='Done' AND due_date IS NOT NULL AND due_date<=date(?, '+6 day') ORDER BY due_date`,[today])
+    .forEach(r=> items.push({kind:'Milestone', title:r.title, date:r.due_date, project:projMap[r.project_id]}));
+  q(`SELECT * FROM work_items WHERE status!='Done' AND due_date IS NOT NULL AND due_date<=date(?, '+6 day') ORDER BY due_date`,[today])
+    .forEach(r=> items.push({kind:'Work item', title:r.title, date:r.due_date, project:projMap[r.project_id]}));
+  q(`SELECT * FROM requests WHERE status IN ('Open','In progress') ORDER BY date`)
+    .forEach(r=> items.push({kind:'Request', title:r.title, date:r.date, project:projMap[r.project_id]}));
+  items.sort((a,b)=> (a.date||'9999').localeCompare(b.date||'9999'));
+
+  const openRaid = q(`SELECT COUNT(*) c FROM raid WHERE status='Open'`)[0].c;
+  const openReq = q(`SELECT COUNT(*) c FROM requests WHERE status IN ('Open','In progress')`)[0].c;
+  const overdueMs = q(`SELECT COUNT(*) c FROM milestones WHERE status!='Done' AND due_date<date(?)`,[today])[0].c;
+  const projCount = q('SELECT COUNT(*) c FROM projects')[0].c;
+
+  $('#main').innerHTML = `
+    <div class="ph"><h1>My Day</h1></div>
+    <p class="lede">Everything due soon or open, across all projects — ${today}</p>
+    <div class="stat-grid">
+      <div class="stat-card"><div class="num">${projCount}</div><div class="lbl">active projects</div></div>
+      <div class="stat-card"><div class="num" style="color:var(--rose);">${overdueMs}</div><div class="lbl">overdue milestones</div></div>
+      <div class="stat-card"><div class="num" style="color:var(--amber);">${openReq}</div><div class="lbl">open requests</div></div>
+      <div class="stat-card"><div class="num" style="color:var(--violet);">${openRaid}</div><div class="lbl">open RAID items</div></div>
+      <div class="stat-card"><div class="num">${items.length}</div><div class="lbl">items in view</div></div>
+    </div>
+    <div id="day-list">
+      ${items.length ? items.map(it=>{
+        const overdue = it.date && it.date < today;
+        return `<div class="day-item ${overdue?'overdue':''}">
+          <div class="kind">${it.kind}</div>
+          <div class="title">${esc(it.title)} <span class="proj">· ${it.project ? esc(it.project.name) : ''}</span></div>
+          <div class="when">${it.date || '—'}</div>
+        </div>`;
+      }).join('') : '<div class="empty">Nothing due in the next week. Add items from a project tab.</div>'}
+    </div>
+    <footer>SQLite in-browser · autosaves on every change</footer>
+  `;
+}
+
+// ---------------- project view ----------------
+function renderProject(){
+  const p = q('SELECT * FROM projects WHERE id=?',[currentProjectId])[0];
+  if(!p){ $('#main').innerHTML = '<div class="empty">Select or add a project.</div>'; return; }
+  const tabDefs = [['overview','Overview'], ...Object.entries(TRACKERS).map(([k,v])=>[k,v.label])];
+  $('#main').innerHTML = `
+    <div class="ph">
+      <h1></h1>
+      <span class="pill" style="background:var(--${p.color}-soft);color:var(--${p.color});"></span>
+    </div>
+    <p class="lede">Project workspace — milestones, work items, requests, docs and RAID all in one place</p>
+    <div id="tabs">${tabDefs.map(([k,l])=>`<button data-tab="${k}" class="${k===currentTab?'active':''}">${l}</button>`).join('')}</div>
+    <div id="tab-body"></div>
+    <footer>SQLite in-browser · autosaves on every change</footer>
+  `;
+  $('.ph h1').textContent = p.name;
+  $('.ph .pill').textContent = p.category;
+  $('#tabs').querySelectorAll('button').forEach(b=>{
+    b.addEventListener('click', ()=>{ currentTab = b.dataset.tab; renderProject(); });
+  });
+  if(currentTab === 'overview') renderOverviewTab(p); else renderTrackerTab(currentTab, p);
+}
+
+function renderOverviewTab(p){
+  const counts = Object.keys(TRACKERS).map(key=>{
+    const rows = q(`SELECT * FROM ${key} WHERE project_id=?`,[p.id]);
+    const open = rows.filter(r=> OPEN_TERMS.has(r.status)).length;
+    return {key, label:TRACKERS[key].label, total:rows.length, open};
+  });
+  $('#tab-body').innerHTML = `
+    <div class="stat-grid">
+      ${counts.map(c=>`<div class="stat-card"><div class="num">${c.total}</div><div class="lbl">${c.label} · ${c.open} open</div></div>`).join('')}
+    </div>
+    <p class="lede" style="margin-top:0;">Click a tab above to add or update items in this project.</p>
+  `;
+}
+
+function renderTrackerTab(key, p){
+  const cfg = TRACKERS[key];
+  const rows = q(`SELECT * FROM ${key} WHERE project_id=? ORDER BY id DESC`,[p.id]);
+  const formFields = cfg.columns.map(c=>{
+    if(c.type==='select') return `<select data-f="${c.key}">${c.options.map(o=>`<option>${o}</option>`).join('')}</select>`;
+    if(c.type==='date') return `<input type="date" data-f="${c.key}">`;
+    return `<input type="text" data-f="${c.key}" placeholder="${c.ph||c.label}" style="${c.wide?'flex:2;':''}">`;
+  }).join('');
+  $('#tab-body').innerHTML = `
+    <div class="add-row" id="add-row">${formFields}<button id="row-add">Add</button></div>
+    <table>
+      <thead><tr>${cfg.columns.map(c=>`<th>${c.label}</th>`).join('')}<th></th></tr></thead>
+      <tbody>
+        ${rows.length ? rows.map(r=>`
+          <tr data-id="${r.id}">
+            ${cfg.columns.map(c=>{
+              if(c.type==='select') return `<td><select class="status-cell" data-f="${c.key}">${c.options.map(o=>`<option ${o===r[c.key]?'selected':''}>${o}</option>`).join('')}</select></td>`;
+              if(c.key==='link' && r[c.key]) return `<td><a href="${esc(r[c.key])}" target="_blank" style="color:var(--cyan);">link</a></td>`;
+              return `<td>${esc(r[c.key])}</td>`;
+            }).join('')}
+            <td><button class="del-btn" onclick="delRow('${key}',${r.id})">×</button></td>
+          </tr>`).join('') : `<tr><td colspan="${cfg.columns.length+1}" class="empty">No entries yet — add one above.</td></tr>`}
+      </tbody>
+    </table>
+  `;
+  $('#tab-body').querySelectorAll('tbody select.status-cell').forEach(sel=>{
+    sel.addEventListener('change', ()=>{
+      const id = sel.closest('tr').dataset.id;
+      db.run(`UPDATE ${key} SET ${sel.dataset.f}=? WHERE id=?`,[sel.value, id]);
+      persist();
+    });
+  });
+  $('#row-add').addEventListener('click', ()=>{
+    const data = {};
+    $('#add-row').querySelectorAll('[data-f]').forEach(el=> data[el.dataset.f]=el.value);
+    if(!Object.values(data).some(v=>v && v.trim && v.trim())) return;
+    const keys = ['project_id', ...cfg.columns.map(c=>c.key)];
+    const vals = [p.id, ...cfg.columns.map(c=> data[c.key] || (c.type==='select'? c.options[0] : ''))];
+    db.run(`INSERT INTO ${key}(${keys.join(',')}) VALUES (${keys.map(()=>'?').join(',')})`, vals);
+    renderTrackerTab(key, p);
+    persist();
+  });
+}
+window.delRow = function(key, id){
+  db.run(`DELETE FROM ${key} WHERE id=?`,[id]);
+  renderProject();
+  persist();
+};
+
+initDB();
+</script>
+</body>
+</html>
+
+
+/// LESSSGOOOOOO -  SIDE QUESTS ARE GETTING REALLL//
