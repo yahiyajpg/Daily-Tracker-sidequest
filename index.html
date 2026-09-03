@@ -23,45 +23,43 @@
     var(--bg); color:var(--text); font-family:var(--sans);}
   #app{display:flex;min-height:100vh;}
 
-  /* sidebar */
-  #side{width:230px;flex-shrink:0;background:var(--panel);border-right:1px solid var(--line);padding:20px 0;display:flex;flex-direction:column;}
-  #side .brand{padding:0 18px 16px;border-bottom:1px solid var(--line);margin-bottom:10px;}
+  #side{width:210px;flex-shrink:0;background:var(--panel);border-right:1px solid var(--line);padding:20px 0;display:flex;flex-direction:column;}
+  #side .brand{padding:0 18px 16px;border-bottom:1px solid var(--line);margin-bottom:6px;}
   #side .brand b{font-size:15px;}
   #side .brand .sub{color:var(--sub);font-size:11.5px;margin-top:2px;}
   #side .navbtn{all:unset;cursor:pointer;display:block;width:100%;padding:10px 18px;font-size:13px;color:var(--sub);border-left:2px solid transparent;}
   #side .navbtn:hover{color:var(--text);background:var(--panel2);}
   #side .navbtn.active{color:var(--violet);border-left-color:var(--violet);background:var(--violet-soft);font-weight:600;}
   #side .section-lbl{padding:14px 18px 6px;font-size:10.5px;letter-spacing:.06em;color:var(--sub);text-transform:uppercase;}
-  #proj-list .navbtn{display:flex;align-items:center;gap:8px;}
-  #proj-list .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
-  #add-proj{padding:10px 18px;}
-  #add-proj input,#add-proj select{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--text);font-size:12px;padding:7px 9px;border-radius:6px;margin-bottom:6px;font-family:var(--sans);}
-  #add-proj button{all:unset;cursor:pointer;width:100%;text-align:center;background:var(--emerald);color:#08201a;font-weight:700;font-size:12px;padding:7px;border-radius:6px;}
+  #proj-quick .navbtn{display:flex;align-items:center;gap:8px;font-size:12.5px;}
+  #proj-quick .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
 
-  main{flex:1;padding:28px 34px;max-width:1100px;}
+  main{flex:1;padding:28px 34px;max-width:1160px;}
   .ph{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:10px;}
-  .ph h1{font-size:21px;margin:0;font-weight:700;}
+  .ph h1{font-size:22px;margin:0;font-weight:700;}
   .pill{display:inline-block;font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600;}
   .lede{color:var(--sub);font-size:13px;margin:2px 0 22px;}
 
-  /* tabs */
-  #tabs{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:0;}
+  /* greeting */
+  #greet{margin-bottom:22px;}
+  #greet h1{font-size:26px;margin:0;font-weight:700;}
+  #greet h1 .editable-name{border-bottom:1px dashed var(--sub);cursor:pointer;}
+  #greet .sub{color:var(--sub);font-size:13.5px;margin-top:4px;}
+
+  #tabs{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap;border-bottom:1px solid var(--line);}
   #tabs button{all:unset;cursor:pointer;padding:8px 14px;font-size:12.5px;color:var(--sub);border-bottom:2px solid transparent;}
   #tabs button.active{color:var(--text);font-weight:600;}
 
-  /* overview */
   .stat-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:24px;}
   .stat-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;}
   .stat-card .num{font-family:var(--mono);font-size:22px;font-weight:700;}
   .stat-card .lbl{color:var(--sub);font-size:11px;margin-top:2px;}
 
-  /* add row form */
   .add-row{display:flex;gap:8px;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:16px;}
-  .add-row input,.add-row select{background:var(--panel2);border:1px solid var(--line);color:var(--text);font-size:12.5px;padding:8px 10px;border-radius:7px;font-family:var(--sans);}
+  .add-row input,.add-row select,.add-row textarea{background:var(--panel2);border:1px solid var(--line);color:var(--text);font-size:12.5px;padding:8px 10px;border-radius:7px;font-family:var(--sans);}
   .add-row button{all:unset;cursor:pointer;background:var(--violet);color:#fff;font-weight:600;font-size:12.5px;padding:8px 16px;border-radius:7px;margin-left:auto;}
   .add-row button:hover{background:#7c4ff0;}
 
-  /* generic table */
   table{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden;}
   thead th{text-align:left;font-size:10.5px;color:var(--sub);text-transform:uppercase;letter-spacing:.03em;font-weight:600;padding:9px 12px;border-bottom:1px solid var(--line);}
   tbody td{padding:9px 12px;border-bottom:1px solid var(--line);font-size:12.8px;vertical-align:middle;}
@@ -72,7 +70,6 @@
   .del-btn:hover{color:var(--rose);}
   .empty{color:var(--sub);font-size:12.5px;padding:18px 4px;}
 
-  /* my day */
   .day-item{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--violet);border-radius:10px;padding:12px 14px;margin-bottom:8px;}
   .day-item .kind{font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--sub);width:70px;flex-shrink:0;}
   .day-item .title{flex:1;font-size:13px;}
@@ -80,6 +77,39 @@
   .day-item .when{font-family:var(--mono);font-size:11px;flex-shrink:0;}
   .day-item.overdue{border-left-color:var(--rose);}
   .day-item.overdue .when{color:var(--rose);}
+
+  /* project cards */
+  .proj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;margin-bottom:24px;}
+  .proj-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;cursor:pointer;border-top:3px solid var(--violet);transition:transform .1s;}
+  .proj-card:hover{background:var(--panel2);}
+  .proj-card .name{font-size:15px;font-weight:700;margin-bottom:6px;}
+  .proj-card .meta{display:flex;justify-content:space-between;align-items:center;margin-top:12px;font-size:11px;color:var(--sub);}
+  .proj-card .open-count{font-family:var(--mono);}
+
+  /* dashboard */
+  .dash-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:20px;}
+  .dash-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-bottom:20px;}
+  .dash-card h3{margin:0 0 14px;font-size:13px;color:var(--sub);text-transform:uppercase;letter-spacing:.04em;}
+  .bar-row{display:flex;align-items:center;gap:10px;margin-bottom:9px;font-size:12.5px;}
+  .bar-row .name{width:150px;flex-shrink:0;color:var(--sub);}
+  .bar-track{flex:1;background:var(--panel2);border-radius:4px;height:9px;overflow:hidden;}
+  .bar-fill{height:100%;border-radius:4px;}
+  .bar-row .val{width:34px;text-align:right;font-family:var(--mono);color:var(--sub);}
+  .donut-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:12.5px;}
+  .donut-row .swatch{width:10px;height:10px;border-radius:3px;flex-shrink:0;}
+  .donut-row .n{margin-left:auto;font-family:var(--mono);color:var(--sub);}
+
+  /* sticky notes */
+  #sticky-add{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;}
+  #sticky-add textarea{flex:1;min-width:220px;min-height:60px;background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:10px;font-family:var(--sans);font-size:13px;}
+  .swatch-pick{display:flex;gap:6px;align-items:center;}
+  .swatch-pick .sw{width:22px;height:22px;border-radius:6px;cursor:pointer;border:2px solid transparent;}
+  .swatch-pick .sw.sel{border-color:#fff;}
+  #sticky-board{columns:4 220px;column-gap:14px;}
+  .sticky{break-inside:avoid;border-radius:10px;padding:14px;margin-bottom:14px;font-size:13px;line-height:1.45;color:#20242c;position:relative;box-shadow:0 6px 14px rgba(0,0,0,.25);}
+  .sticky .del{position:absolute;top:6px;right:8px;all:unset;cursor:pointer;color:rgba(0,0,0,.4);font-size:14px;}
+  .sticky .del:hover{color:rgba(0,0,0,.7);}
+  .sticky .txt{white-space:pre-wrap;padding-right:14px;}
 
   footer{color:var(--sub);font-size:11px;font-family:var(--mono);margin-top:28px;}
 </style>
@@ -89,20 +119,12 @@
   <nav id="side">
     <div class="brand"><b>PMO Tracker</b><div class="sub">daily work, one place</div></div>
     <button class="navbtn active" id="nav-myday">☀ My Day</button>
-    <div class="section-lbl">Projects</div>
-    <div id="proj-list"></div>
-    <div id="add-proj">
-      <input id="np-name" placeholder="New project name">
-      <select id="np-cat">
-        <option value="strategy">Strategy</option>
-        <option value="delivery">Delivery</option>
-        <option value="ops">Ops</option>
-        <option value="reporting">Reporting</option>
-      </select>
-      <button id="np-add">+ Add project</button>
-    </div>
+    <button class="navbtn" id="nav-dashboard">▤ Dashboard</button>
+    <button class="navbtn" id="nav-sticky">✎ Sticky Notes</button>
+    <button class="navbtn" id="nav-projects">▦ Projects</button>
+    <div class="section-lbl">Quick jump</div>
+    <div id="proj-quick"></div>
   </nav>
-
   <main id="main"></main>
 </div>
 
@@ -110,7 +132,7 @@
 let db, SQL, currentProjectId = null, currentTab = 'overview', view = 'myday';
 const $ = s => document.querySelector(s);
 const CAT_COLOR = { strategy:'violet', delivery:'cyan', ops:'amber', reporting:'rose' };
-const PALETTE = ['violet','cyan','amber','rose','emerald'];
+const STICKY_COLORS = { amber:'#FBE58A', rose:'#F9B7C4', cyan:'#A9E1F5', emerald:'#AEEBCB', violet:'#D5C4F9' };
 
 const TRACKERS = {
   milestones: { label:'Milestones', dateField:'due_date',
@@ -179,6 +201,8 @@ async function initDB(){
       CREATE TABLE requests(id INTEGER PRIMARY KEY AUTOINCREMENT, project_id INTEGER, title TEXT, type TEXT, priority TEXT, requester TEXT, date TEXT, status TEXT);
       CREATE TABLE docs(id INTEGER PRIMARY KEY AUTOINCREMENT, project_id INTEGER, title TEXT, category TEXT, owner TEXT, updated_at TEXT, link TEXT);
       CREATE TABLE raid(id INTEGER PRIMARY KEY AUTOINCREMENT, project_id INTEGER, type TEXT, description TEXT, owner TEXT, impact TEXT, status TEXT);
+      CREATE TABLE sticky_notes(id INTEGER PRIMARY KEY AUTOINCREMENT, content TEXT, color TEXT, created_at TEXT);
+      CREATE TABLE settings(key TEXT PRIMARY KEY, value TEXT);
     `);
     db.run(`INSERT INTO projects(name,category,color,created_at) VALUES ('BI Platform Migration','delivery','cyan',date('now'))`);
     const pid = q('SELECT last_insert_rowid() AS id')[0].id;
@@ -186,7 +210,12 @@ async function initDB(){
     db.run(`INSERT INTO work_items(project_id,title,type,owner,due_date,status) VALUES (?,?,?,?,?,?)`,[pid,'Draft migration runbook','Report','You','2026-09-06','To do']);
     db.run(`INSERT INTO requests(project_id,title,type,priority,requester,date,status) VALUES (?,?,?,?,?,?,?)`,[pid,'Grant read access to staging DB','Support','Medium','Finance team','2026-09-03','Open']);
     db.run(`INSERT INTO raid(project_id,type,description,owner,impact,status) VALUES (?,?,?,?,?,?)`,[pid,'Risk','Vendor delivery slip could push go-live','You','High','Open']);
+    db.run(`INSERT INTO sticky_notes(content,color,created_at) VALUES (?,?,datetime('now'))`,['Welcome! Pin quick thoughts here — nothing formal.','amber']);
   }
+  // migrate: ensure settings/sticky tables exist even on older saved DBs
+  try{ db.run(`CREATE TABLE IF NOT EXISTS sticky_notes(id INTEGER PRIMARY KEY AUTOINCREMENT, content TEXT, color TEXT, created_at TEXT)`); }catch(e){}
+  try{ db.run(`CREATE TABLE IF NOT EXISTS settings(key TEXT PRIMARY KEY, value TEXT)`); }catch(e){}
+
   currentProjectId = q('SELECT id FROM projects ORDER BY id LIMIT 1')[0]?.id || null;
   renderSidebar();
   renderMain();
@@ -205,40 +234,44 @@ function q(sql, params=[]){
   return values.map(r=>Object.fromEntries(r.map((v,i)=>[columns[i], v])));
 }
 function esc(s){ const d=document.createElement('div'); d.textContent=s??''; return d.innerHTML; }
+function getSetting(key, fallback){ const r = q('SELECT value FROM settings WHERE key=?',[key]); return r.length ? r[0].value : fallback; }
+function setSetting(key, value){ db.run('INSERT INTO settings(key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value',[key,value]); persist(); }
 
 // ---------------- sidebar ----------------
 function renderSidebar(){
   const projects = q('SELECT * FROM projects ORDER BY id');
-  $('#proj-list').innerHTML = projects.map(p=>`
-    <button class="navbtn ${view==='project' && p.id===currentProjectId ? 'active':''}" onclick="selectProject(${p.id})">
+  $('#proj-quick').innerHTML = projects.map(p=>`
+    <button class="navbtn ${view==='project' && p.id===p.id && currentProjectId===p.id ? 'active':''}" onclick="selectProject(${p.id})">
       <span class="dot" style="background:var(--${p.color});"></span><span></span>
     </button>`).join('');
-  $('#proj-list').querySelectorAll('.navbtn span:nth-child(2)').forEach((el,i)=> el.textContent = projects[i].name);
-  $('#nav-myday').classList.toggle('active', view==='myday');
+  $('#proj-quick').querySelectorAll('.navbtn span:nth-child(2)').forEach((el,i)=> el.textContent = projects[i].name);
+  ['myday','dashboard','sticky','projects'].forEach(v=> $('#nav-'+v).classList.toggle('active', view===v));
 }
 window.selectProject = function(id){ currentProjectId = id; view='project'; currentTab='overview'; renderSidebar(); renderMain(); };
 $('#nav-myday').addEventListener('click', ()=>{ view='myday'; renderSidebar(); renderMain(); });
-$('#np-add').addEventListener('click', ()=>{
-  const name = $('#np-name').value.trim();
-  const cat = $('#np-cat').value;
-  if(!name) return;
-  const color = CAT_COLOR[cat];
-  db.run('INSERT INTO projects(name,category,color,created_at) VALUES (?,?,?,date(\'now\'))',[name,cat,color]);
-  currentProjectId = q('SELECT last_insert_rowid() AS id')[0].id;
-  view='project'; currentTab='overview';
-  $('#np-name').value='';
-  renderSidebar(); renderMain(); persist();
-});
+$('#nav-dashboard').addEventListener('click', ()=>{ view='dashboard'; renderSidebar(); renderMain(); });
+$('#nav-sticky').addEventListener('click', ()=>{ view='sticky'; renderSidebar(); renderMain(); });
+$('#nav-projects').addEventListener('click', ()=>{ view='projects'; renderSidebar(); renderMain(); });
 
-// ---------------- main router ----------------
+// ---------------- router ----------------
 function renderMain(){
   if(view==='myday') return renderMyDay();
+  if(view==='dashboard') return renderDashboard();
+  if(view==='sticky') return renderSticky();
+  if(view==='projects') return renderProjectsGrid();
   return renderProject();
 }
 
 // ---------------- My Day ----------------
+function greeting(){
+  const h = new Date().getHours();
+  if(h < 12) return 'Good morning';
+  if(h < 17) return 'Good afternoon';
+  return 'Good evening';
+}
 function renderMyDay(){
   const today = new Date().toISOString().slice(0,10);
+  const name = getSetting('user_name','Yahiya');
   const projMap = Object.fromEntries(q('SELECT * FROM projects').map(p=>[p.id,p]));
   const items = [];
   q(`SELECT * FROM milestones WHERE status!='Done' AND due_date IS NOT NULL AND due_date<=date(?, '+6 day') ORDER BY due_date`,[today])
@@ -255,8 +288,10 @@ function renderMyDay(){
   const projCount = q('SELECT COUNT(*) c FROM projects')[0].c;
 
   $('#main').innerHTML = `
-    <div class="ph"><h1>My Day</h1></div>
-    <p class="lede">Everything due soon or open, across all projects — ${today}</p>
+    <div id="greet">
+      <h1>${greeting()}, <span class="editable-name" id="edit-name" title="Click to edit">${esc(name)}</span> — let's get going ☕</h1>
+      <div class="sub">${today} · everything due soon or open, across all projects</div>
+    </div>
     <div class="stat-grid">
       <div class="stat-card"><div class="num">${projCount}</div><div class="lbl">active projects</div></div>
       <div class="stat-card"><div class="num" style="color:var(--rose);">${overdueMs}</div><div class="lbl">overdue milestones</div></div>
@@ -272,18 +307,161 @@ function renderMyDay(){
           <div class="title">${esc(it.title)} <span class="proj">· ${it.project ? esc(it.project.name) : ''}</span></div>
           <div class="when">${it.date || '—'}</div>
         </div>`;
-      }).join('') : '<div class="empty">Nothing due in the next week. Add items from a project tab.</div>'}
+      }).join('') : '<div class="empty">Nothing due in the next week. Add items from a project.</div>'}
+    </div>
+    <footer>SQLite in-browser · autosaves on every change</footer>
+  `;
+  $('#edit-name').addEventListener('click', ()=>{
+    const val = prompt('What should we call you?', name);
+    if(val && val.trim()){ setSetting('user_name', val.trim()); renderMyDay(); }
+  });
+}
+
+// ---------------- Dashboard ----------------
+function renderDashboard(){
+  const projects = q('SELECT * FROM projects');
+  const trackerCounts = Object.keys(TRACKERS).map(key=>{
+    const rows = q(`SELECT * FROM ${key}`);
+    return { key, label:TRACKERS[key].label, total: rows.length, open: rows.filter(r=>OPEN_TERMS.has(r.status)).length };
+  });
+  const maxTotal = Math.max(1, ...trackerCounts.map(t=>t.total));
+  const trackerColors = {milestones:'cyan',work_items:'violet',requests:'amber',docs:'emerald',raid:'rose'};
+
+  const catCounts = {};
+  projects.forEach(p=> catCounts[p.category] = (catCounts[p.category]||0)+1);
+  const catTotal = projects.length || 1;
+
+  const raidByType = {};
+  q('SELECT * FROM raid').forEach(r=> raidByType[r.type] = (raidByType[r.type]||0)+1);
+  const raidTotal = Math.max(1, Object.values(raidByType).reduce((a,b)=>a+b,0));
+
+  $('#main').innerHTML = `
+    <div class="ph"><h1>Dashboard</h1></div>
+    <p class="lede">Roll-up across every project</p>
+    <div class="dash-grid">
+      <div>
+        <div class="dash-card">
+          <h3>Items per tracker (open vs total)</h3>
+          ${trackerCounts.map(t=>`
+            <div class="bar-row">
+              <div class="name">${t.label}</div>
+              <div class="bar-track"><div class="bar-fill" style="width:${(t.total/maxTotal*100)}%;background:var(--${trackerColors[t.key]});"></div></div>
+              <div class="val">${t.open}/${t.total}</div>
+            </div>`).join('')}
+        </div>
+        <div class="dash-card">
+          <h3>RAID breakdown</h3>
+          ${Object.keys(raidByType).length ? Object.entries(raidByType).map(([type,n])=>{
+            const colors = {Risk:'rose',Assumption:'amber',Issue:'violet',Dependency:'cyan'};
+            return `<div class="donut-row"><span class="swatch" style="background:var(--${colors[type]||'cyan'});"></span>${type}<span class="n">${n}</span></div>`;
+          }).join('') : '<div class="empty">No RAID entries yet.</div>'}
+        </div>
+      </div>
+      <div>
+        <div class="dash-card">
+          <h3>Projects by category</h3>
+          ${Object.keys(catCounts).length ? Object.entries(catCounts).map(([cat,n])=>{
+            const color = CAT_COLOR[cat]||'violet';
+            return `<div class="bar-row"><div class="name">${cat}</div><div class="bar-track"><div class="bar-fill" style="width:${(n/catTotal*100)}%;background:var(--${color});"></div></div><div class="val">${n}</div></div>`;
+          }).join('') : '<div class="empty">No projects yet.</div>'}
+        </div>
+        <div class="dash-card">
+          <h3>Quick totals</h3>
+          <div class="stat-grid" style="grid-template-columns:1fr 1fr;">
+            <div class="stat-card"><div class="num">${projects.length}</div><div class="lbl">projects</div></div>
+            <div class="stat-card"><div class="num">${q('SELECT COUNT(*) c FROM sticky_notes')[0].c}</div><div class="lbl">sticky notes</div></div>
+          </div>
+        </div>
+      </div>
     </div>
     <footer>SQLite in-browser · autosaves on every change</footer>
   `;
 }
 
-// ---------------- project view ----------------
+// ---------------- Sticky notes ----------------
+let stickyColor = 'amber';
+function renderSticky(){
+  const notes = q('SELECT * FROM sticky_notes ORDER BY id DESC');
+  $('#main').innerHTML = `
+    <div class="ph"><h1>Sticky Notes</h1></div>
+    <p class="lede">Freeform quick-capture — reminders, ideas, things not worth a full tracker entry</p>
+    <div id="sticky-add">
+      <textarea id="sticky-text" placeholder="Jot something down…"></textarea>
+      <div class="swatch-pick" id="swatch-pick">
+        ${Object.entries(STICKY_COLORS).map(([k,hex])=>`<div class="sw ${k===stickyColor?'sel':''}" data-c="${k}" style="background:${hex};"></div>`).join('')}
+      </div>
+      <button id="sticky-add-btn" style="all:unset;cursor:pointer;background:var(--violet);color:#fff;font-weight:600;font-size:12.5px;padding:9px 18px;border-radius:7px;">Pin note</button>
+    </div>
+    <div id="sticky-board">
+      ${notes.length ? notes.map(n=>`
+        <div class="sticky" style="background:${STICKY_COLORS[n.color]||STICKY_COLORS.amber};">
+          <button class="del" onclick="delSticky(${n.id})">×</button>
+          <div class="txt"></div>
+        </div>`).join('') : '<div class="empty">No sticky notes yet.</div>'}
+    </div>
+  `;
+  $('#sticky-board').querySelectorAll('.sticky .txt').forEach((el,i)=> el.textContent = notes[i].content);
+  $('#swatch-pick').querySelectorAll('.sw').forEach(sw=>{
+    sw.addEventListener('click', ()=>{ stickyColor = sw.dataset.c; renderSticky(); });
+  });
+  $('#sticky-add-btn').addEventListener('click', ()=>{
+    const val = $('#sticky-text').value.trim();
+    if(!val) return;
+    db.run('INSERT INTO sticky_notes(content,color,created_at) VALUES (?,?,datetime(\'now\'))',[val, stickyColor]);
+    renderSticky(); persist();
+  });
+}
+window.delSticky = function(id){ db.run('DELETE FROM sticky_notes WHERE id=?',[id]); renderSticky(); persist(); };
+
+// ---------------- Projects grid ----------------
+function renderProjectsGrid(){
+  const projects = q('SELECT * FROM projects ORDER BY id DESC');
+  $('#main').innerHTML = `
+    <div class="ph"><h1>Projects</h1></div>
+    <p class="lede">Click a project to open its milestones, work items, requests, docs and RAID log</p>
+    <div class="add-row" id="add-proj-row">
+      <input id="np-name" placeholder="New project name" style="flex:2;min-width:180px;">
+      <select id="np-cat">
+        <option value="strategy">Strategy</option>
+        <option value="delivery">Delivery</option>
+        <option value="ops">Ops</option>
+        <option value="reporting">Reporting</option>
+      </select>
+      <button id="np-add">+ Add project</button>
+    </div>
+    <div class="proj-grid" id="proj-grid"></div>
+    <footer>SQLite in-browser · autosaves on every change</footer>
+  `;
+  const grid = $('#proj-grid');
+  grid.innerHTML = projects.length ? projects.map(p=>{
+    const openCount = Object.keys(TRACKERS).reduce((sum,key)=> sum + q(`SELECT * FROM ${key} WHERE project_id=?`,[p.id]).filter(r=>OPEN_TERMS.has(r.status)).length, 0);
+    return `<div class="proj-card" style="border-top-color:var(--${p.color});" data-id="${p.id}">
+      <div class="name"></div>
+      <span class="pill" style="background:var(--${p.color}-soft);color:var(--${p.color});"></span>
+      <div class="meta"><span>${p.category}</span><span class="open-count">${openCount} open</span></div>
+    </div>`;
+  }).join('') : '<div class="empty">No projects yet — add one above.</div>';
+  grid.querySelectorAll('.proj-card').forEach((el,i)=>{
+    el.querySelector('.name').textContent = projects[i].name;
+    el.querySelector('.pill').textContent = projects[i].category;
+    el.addEventListener('click', ()=> selectProject(projects[i].id));
+  });
+  $('#np-add').addEventListener('click', ()=>{
+    const name = $('#np-name').value.trim();
+    const cat = $('#np-cat').value;
+    if(!name) return;
+    db.run('INSERT INTO projects(name,category,color,created_at) VALUES (?,?,?,date(\'now\'))',[name,cat,CAT_COLOR[cat]]);
+    persist(); renderSidebar(); renderProjectsGrid();
+  });
+}
+
+// ---------------- project workspace ----------------
 function renderProject(){
   const p = q('SELECT * FROM projects WHERE id=?',[currentProjectId])[0];
   if(!p){ $('#main').innerHTML = '<div class="empty">Select or add a project.</div>'; return; }
   const tabDefs = [['overview','Overview'], ...Object.entries(TRACKERS).map(([k,v])=>[k,v.label])];
   $('#main').innerHTML = `
+    <p class="lede" style="margin-bottom:4px;"><a href="#" id="back-projects" style="color:var(--sub);text-decoration:none;">← All projects</a></p>
     <div class="ph">
       <h1></h1>
       <span class="pill" style="background:var(--${p.color}-soft);color:var(--${p.color});"></span>
@@ -295,6 +473,7 @@ function renderProject(){
   `;
   $('.ph h1').textContent = p.name;
   $('.ph .pill').textContent = p.category;
+  $('#back-projects').addEventListener('click', (e)=>{ e.preventDefault(); view='projects'; renderSidebar(); renderMain(); });
   $('#tabs').querySelectorAll('button').forEach(b=>{
     b.addEventListener('click', ()=>{ currentTab = b.dataset.tab; renderProject(); });
   });
@@ -368,6 +547,3 @@ initDB();
 </script>
 </body>
 </html>
-
-
-/// LESSSGOOOOOO -  SIDE QUESTS ARE GETTING REALLL//
