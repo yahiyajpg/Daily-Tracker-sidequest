@@ -1,5 +1,3 @@
-Got it — no emojis. Here is the cleaner README style:
-
 # PMO Tracker
 
 A lightweight, browser-based Project Management Office (PMO) workspace designed to keep daily work, projects, deliverables, risks, requests, and documentation organized in one place.
