@@ -305,13 +305,13 @@ async function initDB(){
       CREATE TABLE settings(key TEXT PRIMARY KEY, value TEXT);
     `);
     db.run(`INSERT INTO projects(name,description,category,owner,start_date,target_date,status,priority,client,color,archived,favorite,created_at)
-      VALUES ('BI Platform Migration','Migrate legacy reporting to the new BI stack','Delivery','You',date('now'),date('now','+30 day'),'On track','High','Internal','cyan',0,1,date('now'))`);
+      VALUES ('New Enterprise Onboarding','Manage the onboarding process for a new enterprise','Delivery','You',date('now'),date('now','+30 day'),'On track','High','Internal','cyan',0,1,date('now'))`);
     const pid = q('SELECT last_insert_rowid() AS id')[0].id;
-    db.run(`INSERT INTO milestones(project_id,title,due_date,owner,status) VALUES (?,?,?,?,?)`,[pid,'Requirements sign-off','2026-09-10','You','In progress']);
-    db.run(`INSERT INTO work_items(project_id,title,type,owner,due_date,status) VALUES (?,?,?,?,?,?)`,[pid,'Draft migration runbook','Report','You','2026-09-06','To do']);
-    db.run(`INSERT INTO requests(project_id,title,type,priority,requester,date,status) VALUES (?,?,?,?,?,?,?)`,[pid,'Grant read access to staging DB','Support','Medium','Finance team','2026-09-03','Open']);
-    db.run(`INSERT INTO raid(project_id,type,description,owner,impact,status) VALUES (?,?,?,?,?,?)`,[pid,'Risk','Vendor delivery slip could push go-live','You','High','Open']);
-    db.run(`INSERT INTO sticky_notes(content,color,created_at) VALUES (?,?,datetime('now'))`,['Welcome! Pin quick thoughts here — nothing formal.','amber']);
+    db.run(`INSERT INTO milestones(project_id,title,due_date,owner,status) VALUES (?,?,?,?,?)`,[pid,'Go live requirements sign off','2026-09-10','You','In progress']);
+    db.run(`INSERT INTO work_items(project_id,title,type,owner,due_date,status) VALUES (?,?,?,?,?,?)`,[pid,'Deliver sandbox to stakeholders','Report','You','2026-09-06','To do']);
+    db.run(`INSERT INTO requests(project_id,title,type,priority,requester,date,status) VALUES (?,?,?,?,?,?,?)`,[pid,'Grant access to sandbox for stakeholders','Support','Medium','Finance team','2026-09-03','Open']);
+    db.run(`INSERT INTO raid(project_id,type,description,owner,impact,status) VALUES (?,?,?,?,?,?)`,[pid,'Risk','Potential dependency could affect go live','You','High','Open']);
+    db.run(`INSERT INTO sticky_notes(content,color,created_at) VALUES (?,?,datetime('now'))`,['I AM BAAATMAAAAAN','amber']);
   }
   // migrations for DBs saved by older versions
   const alt = (sql)=>{ try{ db.run(sql); }catch(e){} };
