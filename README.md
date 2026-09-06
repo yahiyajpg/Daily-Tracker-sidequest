@@ -1,32 +1,33 @@
 # PMO Tracker
 
-A lightweight, browser-based Project Management Office (PMO) workspace designed to keep daily work, projects, deliverables, risks, requests, and documentation organized in one place.
+A lightweight, browser-based Project Management Office (PMO) workspace for managing projects, milestones, work items, requests, documentation, RAID items, and day-to-day project activities in one place.
 
 ## Overview
 
-PMO Tracker provides a centralized workspace for managing multiple projects and tracking the work associated with them.
+PMO Tracker provides a centralized workspace for managing multiple projects and the work associated with them.
 
-The application allows users to:
+The application is designed to give a PMO or project team a single place to:
 
 * Manage multiple projects
 * Track milestones and deadlines
 * Manage deliverables and work items
 * Track support and service requests
-* Maintain internal documentation
+* Maintain project documentation
 * Monitor Risks, Assumptions, Issues, and Dependencies (RAID)
-* View a consolidated dashboard across all projects
-* Review upcoming and overdue work in My Day
+* Review project activity through a consolidated dashboard
+* Organize upcoming and overdue work through My Day
 * Capture quick reminders using Sticky Notes
+* Customize project categories, statuses, priorities, and tracker types through Settings
 
-All data is managed locally in the browser using an in-browser SQLite database.
+PMO Tracker runs entirely in the browser and uses an in-browser SQLite database for local data storage.
 
-## Features
+## Core Features
 
 ### My Day
 
-The My Day view provides a consolidated view of work that requires attention across all projects.
+My Day provides a consolidated view of work requiring attention across the PMO workspace.
 
-It displays:
+It includes:
 
 * Upcoming milestones
 * Upcoming work items
@@ -35,74 +36,90 @@ It displays:
 * Open RAID items
 * Active project count
 
+This provides a quick starting point for reviewing current priorities.
+
 ### Dashboard
 
-The Dashboard provides a high-level roll-up across the PMO workspace.
+The Dashboard provides a high-level overview of the PMO workspace.
 
 It includes:
 
-* Open versus total items by tracker
-* RAID item breakdown
+* Open and total items across project trackers
+* RAID breakdown
 * Projects by category
-* Total project count
-* Total sticky notes
+* Project counts
+* Sticky note counts
+* Overall project activity
 
 ### Projects
 
-Users can create and manage multiple projects.
+Projects are the central part of the workspace.
 
-Projects can be categorized as:
+Each project can contain its own:
 
-* Strategy
-* Delivery
-* Operations
-* Reporting
+* Overview
+* Milestones
+* Work Items
+* Support & Service Requests
+* Internal Documentation
+* RAID Log
 
-Each project includes its own workspace for tracking milestones, work items, requests, documentation, and RAID items.
+Projects can also be:
+
+* Edited
+* Duplicated
+* Favorited
+* Archived
+* Restored
+* Deleted
+
+Project information can include:
+
+* Project name
+* Description
+* Category
+* Owner
+* Status
+* Priority
+* Start date
+* Target date
+* Client
+* Project color
 
 ## Project Trackers
 
 ### Milestones
 
-Track key project milestones, including:
+Track important project milestones and deadlines.
 
-* Milestone
+Each milestone can include:
+
+* Milestone name
 * Due date
 * Owner
 * Status
+* Notes
 
-Available statuses:
+### Work Items
 
-* Not Started
-* In Progress
-* At Risk
-* Done
+Track project deliverables, tasks, and other pieces of work.
 
-### Deliverables / Work Items
+Each work item can include:
 
-Track project tasks and deliverables.
-
-Fields include:
-
-* Item
+* Item name
 * Type
 * Owner
 * Due date
 * Status
+* Notes
 
-Supported work item types:
-
-* Feature
-* Report
-* Configuration
-* Training
-* Migration
+Work item types can be customized through Settings.
 
 ### Support & Service Requests
 
-Track requests and operational issues related to projects.
+Track requests and operational issues associated with projects.
 
-Fields include:
+Each request can include:
 
 * Request
 * Type
@@ -110,77 +127,109 @@ Fields include:
 * Requester
 * Date
 * Status
+* Notes
 
-Request types include:
-
-* Support
-* Service Request
-* Incident
-
-Priority levels include:
-
-* Low
-* Medium
-* High
-* Critical
+Request types and priorities can be customized through Settings.
 
 ### Internal Documentation
 
 Maintain references to important project documentation.
 
-Documentation categories include:
+Documentation entries can include:
 
-* SOP
-* Design
-* Meeting Notes
-* Policy
-* Guide
+* Document name
+* Category
+* Owner
+* Updated date
+* Link
+* Notes
 
-Each document can include an owner, updated date, and optional link.
+Document categories can be customized through Settings.
 
 ### RAID Log
 
-Track project Risks, Assumptions, Issues, and Dependencies.
+Track:
 
-Each entry includes:
+* Risks
+* Assumptions
+* Issues
+* Dependencies
+
+Each RAID entry can include:
 
 * Type
 * Description
 * Owner
 * Impact
 * Status
+* Notes
 
-RAID categories include:
+RAID types and impact levels can be customized through Settings.
 
-* Risk
-* Assumption
-* Issue
-* Dependency
+## Settings
+
+Settings allows the workspace to be configured without changing the application code.
+
+Users can manage their own lists for:
+
+* Project categories
+* Project statuses
+* Project priorities
+* Work item types
+* Request types
+* RAID types
+* RAID impacts
+* Documentation categories
+
+Workspace information such as the workspace name and user name can also be customized.
+
+## Editing & Organization
+
+PMO Tracker supports editing directly within the workspace.
+
+* Click a tracker row to open its edit panel
+* Double-click a title for quick renaming
+* Edit project information through the project menu
+* Duplicate projects when a similar structure is needed
+* Archive projects without permanently deleting them
+* Restore archived projects when needed
+* Delete projects with a confirmation step
 
 ## Sticky Notes
 
-The Sticky Notes section allows users to capture quick reminders, ideas, and informal notes that do not require a full project tracker entry.
+Sticky Notes provides a lightweight space for reminders, ideas, and information that does not require a formal project tracker entry.
 
 Users can:
 
 * Create notes
-* Select different note colors
+* Customize note colors
+* Edit notes
 * Delete notes
-* Capture reminders and ideas quickly
+
+## Read-Only Mode
+
+PMO Tracker supports a read-only experience for sharing the workspace with visitors.
+
+In read-only mode, visitors can browse the available project information and dashboards without access to editing or destructive actions.
+
+This makes the application suitable for showcasing the workspace or sharing project information without allowing visitors to modify it.
 
 ## Data Storage
 
-PMO Tracker uses SQLite through sql.js and stores data locally in the browser.
+PMO Tracker uses **SQLite through sql.js** to manage application data directly in the browser.
 
-The application automatically saves changes, allowing users to continue managing their workspace without requiring a traditional backend database.
+Data is stored locally, so the application does not require a traditional backend database or server-side application.
+
+Because data is browser-local, different browsers or devices will have separate data stores unless a future cloud-backed storage layer is introduced.
 
 ## Technology Stack
 
-* HTML
-* CSS
-* JavaScript
-* SQLite
-* sql.js
+* **HTML** - Application structure
+* **CSS** - Layout and styling
+* **JavaScript** - Application logic and interactions
+* **SQLite** - Local relational data model
+* **sql.js** - SQLite running inside the browser
+* **Google Fonts** - Application typography
 
 ## Application Structure
 
@@ -190,11 +239,13 @@ PMO Tracker
 ├── My Day
 ├── Dashboard
 ├── Sticky Notes
+├── Settings
 │
 └── Projects
-    ├── Overview
+    │
+    ├── Project Overview
     ├── Milestones
-    ├── Deliverables / Work Items
+    ├── Work Items
     ├── Support & Service Requests
     ├── Internal Documentation
     └── RAID Log
@@ -202,11 +253,17 @@ PMO Tracker
 
 ## Getting Started
 
-1. Save or download the application HTML file.
-2. Open the file in a modern web browser.
-3. Create a project.
-4. Add milestones, work items, requests, documentation, and RAID entries.
-5. Use My Day and Dashboard to review priorities across projects.
+PMO Tracker is a client-side application and does not require a backend setup.
+
+1. Clone or download the repository.
+2. Open `index.html` in a modern web browser.
+3. Create or configure your workspace.
+4. Create a project.
+5. Add milestones, work items, requests, documentation, and RAID entries.
+6. Use My Day and Dashboard to review activity across projects.
+7. Use Settings to customize the workspace and available tracker options.
+
+For local development, the application can also be served through a simple local web server.
 
 ## Use Cases
 
@@ -216,31 +273,26 @@ PMO Tracker can be used for:
 * Implementation tracking
 * Client onboarding
 * Migration projects
-* Go-live readiness tracking
+* Go-live readiness
 * Internal PMO operations
 * Risk and issue management
 * Cross-functional project coordination
+* Project documentation management
+* Operational work tracking
 
-## Future Enhancements
+## Project Status
 
-Potential future enhancements include:
+PMO Tracker is an evolving side project focused on experimenting with a lightweight, browser-based approach to PMO and project work management.
 
-* User authentication
-* Cloud-based data storage
-* Team collaboration
-* Search and filtering
-* Export to Excel or CSV
-* Automated reminders
-* Email notifications
-* Advanced reporting
-* Gantt charts and project timelines
-* File attachments
-* Role-based access
-* Integration with external project management tools
+## Links
+
+**Live Application:** [Add live app link]
+
+**Repository:** [Add GitHub repository link]
 
 ## Author
 
-Yahiya M//////
+**Yahiya M.**
 
 ## License
 
