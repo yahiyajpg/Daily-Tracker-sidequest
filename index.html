@@ -272,9 +272,9 @@ async function initDB(){
   SQL = await initSqlJs({ locateFile: f => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/${f}` });
   let loaded = false;
   try{
-    const rec = await window.storage.get('pmo-db', false);
-    if(rec && rec.value){
-      const bin = atob(rec.value);
+    const raw = localStorage.getItem('pmo-db');
+    if(raw){
+      const bin = atob(raw);
       const bytes = new Uint8Array(bin.length);
       for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
       db = new SQL.Database(bytes);
@@ -321,7 +321,7 @@ async function persist(){
   try{
     const bytes = db.export();
     let bin=''; for(let i=0;i<bytes.length;i++) bin+=String.fromCharCode(bytes[i]);
-    await window.storage.set('pmo-db', btoa(bin), false);
+    localStorage.setItem('pmo-db', btoa(bin));
   }catch(e){ console.error(e); }
 }
 function q(sql, params=[]){
