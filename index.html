@@ -64,6 +64,8 @@
   #greet{margin-bottom:22px;}
   #greet h1{font-size:26px;margin:0;font-weight:700;}
   #greet h1 .editable-name{border-bottom:1px dashed var(--sub);cursor:pointer;}
+  #greet .inline-edit-btn{all:unset;cursor:pointer;color:var(--sub);font-size:11px;font-weight:600;padding:3px 7px;border-radius:5px;margin-left:7px;vertical-align:middle;}
+  #greet .inline-edit-btn:hover{background:var(--panel2);color:var(--text);}
   #greet .sub{color:var(--sub);font-size:13.5px;margin-top:4px;}
 
   #tabs{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap;border-bottom:1px solid var(--line);}
@@ -89,6 +91,9 @@
   select.status-cell{background:var(--panel2);border:1px solid var(--line);color:var(--text);font-size:11.5px;padding:4px 7px;border-radius:6px;font-family:var(--sans);}
   .del-btn{all:unset;cursor:pointer;color:var(--sub);font-size:15px;}
   .del-btn:hover{color:var(--rose);}
+  .row-actions{white-space:nowrap;text-align:right;}
+  .row-edit-btn{all:unset;cursor:pointer;color:var(--sub);font-size:11px;font-weight:600;padding:4px 7px;border-radius:5px;}
+  .row-edit-btn:hover{background:var(--panel2);color:var(--text);}
   .empty{color:var(--sub);font-size:12.5px;padding:18px 4px;}
   .row-title{cursor:text;}
   .row-title:hover{text-decoration:underline dotted;}
@@ -109,6 +114,8 @@
   .proj-card .star{color:var(--amber);font-size:13px;margin-right:4px;}
   .proj-card .menu-btn{all:unset;cursor:pointer;color:var(--sub);font-size:16px;padding:2px 6px;border-radius:5px;}
   .proj-card .menu-btn:hover{background:var(--panel3);color:var(--text);}
+  .proj-card .edit-project-btn{all:unset;cursor:pointer;color:var(--sub);font-size:11.5px;font-weight:600;padding:4px 7px;border-radius:6px;}
+  .proj-card .edit-project-btn:hover{background:var(--panel3);color:var(--text);}
   .proj-card .meta{display:flex;justify-content:space-between;align-items:center;margin-top:12px;font-size:11px;color:var(--sub);}
   .proj-card .pills{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;}
   .card-menu{position:absolute;top:38px;right:12px;background:var(--panel3);border:1px solid var(--line);border-radius:9px;padding:6px;z-index:20;min-width:150px;box-shadow:0 8px 20px rgba(0,0,0,.4);display:none;}
@@ -138,7 +145,10 @@
   .sticky{break-inside:avoid;border-radius:10px;padding:14px;margin-bottom:14px;font-size:13px;line-height:1.45;color:#20242c;position:relative;box-shadow:0 6px 14px rgba(0,0,0,.25);}
   .sticky .del{position:absolute;top:6px;right:8px;all:unset;cursor:pointer;color:rgba(0,0,0,.4);font-size:14px;}
   .sticky .del:hover{color:rgba(0,0,0,.7);}
-  .sticky .txt{white-space:pre-wrap;padding-right:14px;}
+  .sticky-actions{position:absolute;top:6px;right:8px;display:flex;align-items:center;gap:4px;}
+  .sticky .edit-note{all:unset;cursor:pointer;color:rgba(0,0,0,.55);font-size:11px;padding:2px 5px;border-radius:4px;}
+  .sticky .edit-note:hover{color:rgba(0,0,0,.9);background:rgba(0,0,0,.07);}
+  .sticky .txt{white-space:pre-wrap;padding-right:14px;padding-top:3px;}
 
   /* settings */
   .set-group{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:14px;}
@@ -361,12 +371,28 @@ function requireEdit(){
   if(!editMode){ toast('View only. This is a live demo, ask the owner for edit access.'); return false; }
   return true;
 }
+
+function requestEditAccess(){
+  if(editMode) return true;
+  const pw = prompt('Enter the edit password:');
+  if(pw === null) return false;
+  if(pw === EDIT_PASSWORD){
+    editMode = true;
+    localStorage.setItem('pmo-editor','true');
+    renderSidebar();
+    renderMain();
+    toast('Edit mode unlocked.');
+    return true;
+  }
+  toast('Wrong password.');
+  return false;
+}
 function updateLockIcon(){ $('#lock-toggle').textContent = editMode ? '🔓' : '🔒'; }
 $('#lock-toggle').addEventListener('click', ()=>{
   if(editMode){
     editMode = false;
     localStorage.removeItem('pmo-editor');
-    updateLockIcon(); toast('Switched to view-only mode.'); renderMain();
+    updateLockIcon(); renderSidebar(); toast('Switched to view-only mode.'); renderMain();
     return;
   }
   const pw = prompt('Enter the edit password:');
@@ -374,7 +400,7 @@ $('#lock-toggle').addEventListener('click', ()=>{
   if(pw === EDIT_PASSWORD){
     editMode = true;
     localStorage.setItem('pmo-editor','true');
-    updateLockIcon(); toast('Edit mode unlocked.'); renderMain();
+    updateLockIcon(); renderSidebar(); toast('Edit mode unlocked.'); renderMain();
   } else {
     toast('Wrong password.');
   }
@@ -398,6 +424,9 @@ $('#modal-overlay').addEventListener('click', (e)=>{ if(e.target.id==='modal-ove
 function renderSidebar(){
   $('#brand-name').textContent = getSetting('workspace_name','PMO Workspace');
   const projects = q('SELECT * FROM projects WHERE archived=0 ORDER BY favorite DESC, id');
+  const accessStyle = editMode ? '' : 'style="display:none;"';
+  $('#nav-archive').setAttribute('style', editMode ? '' : 'display:none;');
+  $('#nav-settings').setAttribute('style', editMode ? '' : 'display:none;');
   $('#proj-quick').innerHTML = projects.map(p=>`
     <button class="navbtn ${view==='project' && currentProjectId===p.id ? 'active':''}" onclick="selectProject(${p.id})">
       <span class="dot" style="background:var(--${p.color||'violet'});"></span><span></span>
@@ -454,7 +483,7 @@ function renderMyDay(){
 
   $('#main').innerHTML = `
     <div id="greet">
-      <h1>${greeting()}, <span class="${editMode?'editable-name':''}" id="edit-name" title="${editMode?'Click to edit':''}">${esc(name)}</span>. Let's get going ☕${!editMode?'<span class="view-only-badge">View only</span>':''}</h1>
+      <h1>${greeting()}, <span class="editable-name" id="edit-name" title="Click to edit">${esc(name)}</span><button id="edit-name-btn" class="inline-edit-btn">Edit</button>. Let's get going ☕${!editMode?'<span class="view-only-badge">View only</span>':''}</h1>
       <div class="sub">Everything due soon or open, across all projects</div>
     </div>
     <div class="stat-grid">
@@ -476,11 +505,13 @@ function renderMyDay(){
     </div>
     <footer>SQLite in-browser · autosaves on every change</footer>
   `;
-  $('#edit-name').addEventListener('click', ()=>{
-    if(!requireEdit()) return;
+  const editName = ()=>{
+    if(!editMode && !requestEditAccess()) return;
     const val = prompt('What should we call you?', name);
     if(val && val.trim()){ setSetting('user_name', val.trim()); renderMyDay(); }
-  });
+  };
+  $('#edit-name').addEventListener('click', editName);
+  $('#edit-name-btn').addEventListener('click', editName);
 }
 
 // ---------------- Dashboard ----------------
@@ -562,7 +593,10 @@ function renderSticky(){
     <div id="sticky-board">
       ${notes.length ? notes.map(n=>`
         <div class="sticky" style="background:${STICKY_COLORS[n.color]||STICKY_COLORS.amber};">
-          ${editMode?`<button class="del" onclick="delSticky(${n.id})">×</button>`:''}
+          <div class="sticky-actions">
+            <button class="edit-note" onclick="editSticky(${n.id})" title="Edit note">Edit</button>
+            ${editMode?`<button class="del" onclick="delSticky(${n.id})" title="Delete note">×</button>`:''}
+          </div>
           <div class="txt"></div>
         </div>`).join('') : '<div class="empty">No sticky notes yet.</div>'}
     </div>
@@ -580,6 +614,34 @@ function renderSticky(){
     });
   }
 }
+window.editSticky = function(id){
+  if(!editMode && !requestEditAccess()) return;
+  const row = q('SELECT * FROM sticky_notes WHERE id=?',[id])[0];
+  if(!row) return;
+
+  const pw = prompt('Enter the edit password:');
+  if(pw === null) return;
+
+  if(pw !== EDIT_PASSWORD){
+    toast('Wrong password.');
+    return;
+  }
+
+  const val = prompt('Edit note:', row.content);
+  if(val === null) return;
+
+  const trimmed = val.trim();
+  if(!trimmed) {
+    toast('Note cannot be empty.');
+    return;
+  }
+
+  db.run('UPDATE sticky_notes SET content=? WHERE id=?',[trimmed,id]);
+  persist();
+  renderSticky();
+  toast('Note updated.');
+};
+
 window.delSticky = function(id){
   if(!requireEdit()) return;
   db.run('DELETE FROM sticky_notes WHERE id=?',[id]); renderSticky(); persist();
@@ -605,7 +667,7 @@ function renderProjectsGrid(archived){
     return `<div class="proj-card" style="border-top-color:var(--${p.color||'violet'});" data-id="${p.id}">
       <div class="card-top">
         <div class="name"><span class="star">${p.favorite?'★':''}</span><span class="nm"></span></div>
-        ${editMode?`<button class="menu-btn" data-menu="${p.id}">⋯</button>`:''}
+        <button class="edit-project-btn" data-edit-project="${p.id}" title="Edit project">Edit</button>
       </div>
       <div class="pills">
         <span class="pill" style="background:var(--${p.color}-soft);color:var(--${p.color});"></span>
@@ -634,15 +696,19 @@ function renderProjectsGrid(archived){
     if(p.status && el.querySelectorAll('.pill')[1]) el.querySelectorAll('.pill')[1].textContent = p.status;
     el.querySelector('.meta span').textContent = p.client || p.owner || '';
     el.addEventListener('click', (e)=>{
-      if(e.target.closest('.menu-btn') || e.target.closest('.card-menu')) return;
+      if(e.target.closest('.edit-project-btn') || e.target.closest('.card-menu')) return;
       selectProject(p.id);
     });
-    if(editMode){
-      el.querySelector('.menu-btn').addEventListener('click',(e)=>{
+
+    const editBtn = el.querySelector('.edit-project-btn');
+    if(editBtn){
+      editBtn.addEventListener('click',(e)=>{
         e.stopPropagation();
-        document.querySelectorAll('.card-menu.open').forEach(m=>{ if(m.id!=='menu-'+p.id) m.classList.remove('open'); });
-        el.querySelector('.card-menu').classList.toggle('open');
+        if(editMode || requestEditAccess()) openEditProjectModal(p);
       });
+    }
+
+    if(editMode && el.querySelector('.card-menu')){
       el.querySelectorAll('.card-menu button').forEach(btn=>{
         btn.addEventListener('click',(e)=>{
           e.stopPropagation();
@@ -764,7 +830,7 @@ function renderProject(){
       <h1><span id="proj-title-view"></span></h1>
       <div style="display:flex;gap:8px;align-items:center;">
         <span class="pill" style="background:var(--${p.color}-soft);color:var(--${p.color});"></span>
-        ${editMode?`<button class="menu-btn" id="proj-edit-btn" style="all:unset;cursor:pointer;color:var(--sub);font-size:16px;padding:2px 8px;border-radius:6px;">⋯</button>`:''}
+        <button id="proj-edit-btn" style="all:unset;cursor:pointer;color:var(--sub);font-size:12px;font-weight:600;padding:5px 8px;border-radius:6px;">Edit</button>
       </div>
     </div>
     <p class="lede">${esc(p.description||'')||'Project workspace: milestones, work items, requests, docs and RAID all in one place'}${!editMode?' <span class="view-only-badge">View only</span>':''}</p>
@@ -773,15 +839,16 @@ function renderProject(){
     <footer>SQLite in-browser · autosaves on every change</footer>
   `;
   $('#proj-title-view').textContent = p.name;
-  if(editMode){
-    $('#proj-title-view').title = 'Double-click to rename';
-    $('#proj-title-view').addEventListener('dblclick', ()=>{
-      const val = prompt('Rename project', p.name);
-      if(val && val.trim()){ db.run('UPDATE projects SET name=? WHERE id=?',[val.trim(), p.id]); persist(); renderSidebar(); renderProject(); }
-    });
-  }
+  $('#proj-title-view').title = 'Double-click to rename';
+  $('#proj-title-view').addEventListener('dblclick', ()=>{
+    if(!requestEditAccess()) return;
+    const val = prompt('Rename project', p.name);
+    if(val && val.trim()){ db.run('UPDATE projects SET name=? WHERE id=?',[val.trim(), p.id]); persist(); renderSidebar(); renderProject(); }
+  });
   $('.ph .pill').textContent = p.category || '—';
-  if(editMode) $('#proj-edit-btn').addEventListener('click', ()=> openEditProjectModal(p));
+  $('#proj-edit-btn').addEventListener('click', ()=>{
+    if(editMode || requestEditAccess()) openEditProjectModal(p);
+  });
   $('#back-projects').addEventListener('click', (e)=>{ e.preventDefault(); view='projects'; renderSidebar(); renderMain(); });
   $('#tabs').querySelectorAll('button').forEach(b=>{
     b.addEventListener('click', ()=>{ currentTab = b.dataset.tab; renderProject(); });
@@ -825,7 +892,7 @@ function renderTrackerTab(key, p){
   $('#tab-body').innerHTML = `
     ${editMode ? `<div class="add-row" id="add-row">${formFields}<button id="row-add">Add</button></div>` : ''}
     <table>
-      <thead><tr>${quickCols.map(c=>`<th>${c.label}</th>`).join('')}${editMode?'<th></th>':''}</tr></thead>
+      <thead><tr>${quickCols.map(c=>`<th>${c.label}</th>`).join('')}<th></th></tr></thead>
       <tbody>
         ${rows.length ? rows.map(r=>`
           <tr data-id="${r.id}">
@@ -835,7 +902,10 @@ function renderTrackerTab(key, p){
               if(c.key==='title' || c.key==='description') return `<td class="row-title" data-rename="${c.key}">${esc(r[c.key])}</td>`;
               return `<td>${esc(r[c.key])}</td>`;
             }).join('')}
-            ${editMode?'<td><button class="del-btn" data-del="1">×</button></td>':''}
+            <td class="row-actions">
+              <button class="row-edit-btn" data-edit-row="1">Edit</button>
+              ${editMode?'<button class="del-btn" data-del="1">×</button>':''}
+            </td>
           </tr>`).join('') : `<tr><td colspan="${quickCols.length+1}" class="empty">No entries yet${editMode?' — add one above.':'.'}</td></tr>`}
       </tbody>
     </table>
@@ -844,9 +914,17 @@ function renderTrackerTab(key, p){
     const id = parseInt(tr.dataset.id);
     const row = rows.find(r=>r.id===id);
     tr.addEventListener('click',(e)=>{
-      if(e.target.closest('select') || e.target.closest('button')) return;
-      openRowModal(key, cfg, row, p);
+      if(e.target.closest('select') || e.target.closest('button') || e.target.closest('.row-edit-btn')) return;
+      if(editMode || requestEditAccess()) openRowModal(key, cfg, row, p);
     });
+    const rowEditBtn = tr.querySelector('[data-edit-row]');
+    if(rowEditBtn){
+      rowEditBtn.addEventListener('click',(e)=>{
+        e.stopPropagation();
+        if(editMode || requestEditAccess()) openRowModal(key, cfg, row, p);
+      });
+    }
+
     if(editMode){
       const renameCell = tr.querySelector('[data-rename]');
       if(renameCell){
