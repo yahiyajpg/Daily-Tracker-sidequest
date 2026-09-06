@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>PMO Tracker</title>
+<title>PMO Workspace</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/sql-wasm.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
   :root{
-    --bg:#0B1120; --panel:#121A2E; --panel2:#161F38; --line:#232D48;
+    --bg:#0B1120; --panel:#121A2E; --panel2:#161F38; --panel3:#1C2745; --line:#232D48;
     --text:#E9EDF7; --sub:#8C96B0;
     --violet:#8B5CF6; --violet-soft:rgba(139,92,246,.14);
     --cyan:#38BDF8;   --cyan-soft:rgba(56,189,248,.14);
@@ -33,6 +33,7 @@
   #side .section-lbl{padding:14px 18px 6px;font-size:10.5px;letter-spacing:.06em;color:var(--sub);text-transform:uppercase;}
   #proj-quick .navbtn{display:flex;align-items:center;gap:8px;font-size:12.5px;}
   #proj-quick .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+  #side .bottom-nav{margin-top:auto;border-top:1px solid var(--line);padding-top:6px;}
 
   main{flex:1;padding:28px 34px;max-width:1160px;}
   .ph{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:10px;}
@@ -40,7 +41,6 @@
   .pill{display:inline-block;font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600;}
   .lede{color:var(--sub);font-size:13px;margin:2px 0 22px;}
 
-  /* greeting */
   #greet{margin-bottom:22px;}
   #greet h1{font-size:26px;margin:0;font-weight:700;}
   #greet h1 .editable-name{border-bottom:1px dashed var(--sub);cursor:pointer;}
@@ -64,11 +64,14 @@
   thead th{text-align:left;font-size:10.5px;color:var(--sub);text-transform:uppercase;letter-spacing:.03em;font-weight:600;padding:9px 12px;border-bottom:1px solid var(--line);}
   tbody td{padding:9px 12px;border-bottom:1px solid var(--line);font-size:12.8px;vertical-align:middle;}
   tbody tr:last-child td{border-bottom:none;}
+  tbody tr{cursor:pointer;}
   tbody tr:hover{background:var(--panel2);}
   select.status-cell{background:var(--panel2);border:1px solid var(--line);color:var(--text);font-size:11.5px;padding:4px 7px;border-radius:6px;font-family:var(--sans);}
   .del-btn{all:unset;cursor:pointer;color:var(--sub);font-size:15px;}
   .del-btn:hover{color:var(--rose);}
   .empty{color:var(--sub);font-size:12.5px;padding:18px 4px;}
+  .row-title{cursor:text;}
+  .row-title:hover{text-decoration:underline dotted;}
 
   .day-item{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--violet);border-radius:10px;padding:12px 14px;margin-bottom:8px;}
   .day-item .kind{font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--sub);width:70px;flex-shrink:0;}
@@ -78,15 +81,22 @@
   .day-item.overdue{border-left-color:var(--rose);}
   .day-item.overdue .when{color:var(--rose);}
 
-  /* project cards */
-  .proj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;margin-bottom:24px;}
-  .proj-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;cursor:pointer;border-top:3px solid var(--violet);transition:transform .1s;}
+  .proj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin-bottom:24px;}
+  .proj-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;cursor:pointer;border-top:3px solid var(--violet);position:relative;}
   .proj-card:hover{background:var(--panel2);}
-  .proj-card .name{font-size:15px;font-weight:700;margin-bottom:6px;}
+  .proj-card .card-top{display:flex;justify-content:space-between;align-items:flex-start;}
+  .proj-card .name{font-size:15px;font-weight:700;margin-bottom:6px;padding-right:20px;}
+  .proj-card .star{color:var(--amber);font-size:13px;margin-right:4px;}
+  .proj-card .menu-btn{all:unset;cursor:pointer;color:var(--sub);font-size:16px;padding:2px 6px;border-radius:5px;}
+  .proj-card .menu-btn:hover{background:var(--panel3);color:var(--text);}
   .proj-card .meta{display:flex;justify-content:space-between;align-items:center;margin-top:12px;font-size:11px;color:var(--sub);}
-  .proj-card .open-count{font-family:var(--mono);}
+  .proj-card .pills{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;}
+  .card-menu{position:absolute;top:38px;right:12px;background:var(--panel3);border:1px solid var(--line);border-radius:9px;padding:6px;z-index:20;min-width:150px;box-shadow:0 8px 20px rgba(0,0,0,.4);display:none;}
+  .card-menu.open{display:block;}
+  .card-menu button{all:unset;cursor:pointer;display:block;width:100%;padding:7px 10px;font-size:12.5px;color:var(--text);border-radius:6px;text-align:left;}
+  .card-menu button:hover{background:var(--panel2);}
+  .card-menu button.danger{color:var(--rose);}
 
-  /* dashboard */
   .dash-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:20px;}
   .dash-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-bottom:20px;}
   .dash-card h3{margin:0 0 14px;font-size:13px;color:var(--sub);text-transform:uppercase;letter-spacing:.04em;}
@@ -99,7 +109,6 @@
   .donut-row .swatch{width:10px;height:10px;border-radius:3px;flex-shrink:0;}
   .donut-row .n{margin-left:auto;font-family:var(--mono);color:var(--sub);}
 
-  /* sticky notes */
   #sticky-add{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;}
   #sticky-add textarea{flex:1;min-width:220px;min-height:60px;background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:10px;font-family:var(--sans);font-size:13px;}
   .swatch-pick{display:flex;gap:6px;align-items:center;}
@@ -111,28 +120,84 @@
   .sticky .del:hover{color:rgba(0,0,0,.7);}
   .sticky .txt{white-space:pre-wrap;padding-right:14px;}
 
+  /* settings */
+  .set-group{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:14px;}
+  .set-group h3{margin:0 0 10px;font-size:13.5px;}
+  .opt-chip{display:inline-flex;align-items:center;gap:6px;background:var(--panel2);border:1px solid var(--line);padding:5px 6px 5px 12px;border-radius:20px;font-size:12px;margin:0 8px 8px 0;}
+  .opt-chip button{all:unset;cursor:pointer;color:var(--sub);font-size:13px;padding:0 5px;}
+  .opt-chip button:hover{color:var(--rose);}
+  .opt-add{display:flex;gap:6px;margin-top:6px;}
+  .opt-add input{background:var(--panel2);border:1px solid var(--line);color:var(--text);font-size:12px;padding:6px 10px;border-radius:6px;width:160px;}
+  .opt-add button{all:unset;cursor:pointer;background:var(--violet);color:#fff;font-size:12px;padding:6px 12px;border-radius:6px;}
+  .set-field{margin-bottom:14px;}
+  .set-field label{display:block;font-size:11.5px;color:var(--sub);margin-bottom:5px;}
+  .set-field input{width:280px;background:var(--panel2);border:1px solid var(--line);color:var(--text);font-size:13px;padding:8px 10px;border-radius:7px;}
+
+  /* modal */
+  #modal-overlay{position:fixed;inset:0;background:rgba(5,8,16,.65);display:none;align-items:flex-start;justify-content:center;z-index:100;padding:40px 20px;overflow:auto;}
+  #modal-overlay.open{display:flex;}
+  #modal-box{background:var(--panel3);border:1px solid var(--line);border-radius:14px;padding:22px 24px;width:100%;max-width:480px;box-shadow:0 20px 50px rgba(0,0,0,.5);}
+  #modal-box h2{margin:0 0 4px;font-size:17px;}
+  #modal-box .mlede{color:var(--sub);font-size:12px;margin-bottom:16px;}
+  .mfield{margin-bottom:12px;}
+  .mfield label{display:block;font-size:11px;color:var(--sub);margin-bottom:4px;}
+  .mfield input,.mfield select,.mfield textarea{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--text);font-size:13px;padding:8px 10px;border-radius:7px;font-family:var(--sans);}
+  .mfield textarea{min-height:60px;}
+  .mrow2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .mactions{display:flex;gap:8px;margin-top:18px;flex-wrap:wrap;}
+  .mactions button{all:unset;cursor:pointer;padding:9px 16px;border-radius:8px;font-size:12.5px;font-weight:600;}
+  .btn-primary{background:var(--violet);color:#fff;}
+  .btn-primary:hover{background:#7c4ff0;}
+  .btn-ghost{background:var(--panel2);color:var(--text);border:1px solid var(--line);}
+  .btn-ghost:hover{background:var(--panel);}
+  .btn-danger{background:rgba(251,113,133,.15);color:var(--rose);}
+  .btn-danger:hover{background:rgba(251,113,133,.28);}
+  .warn-box{background:rgba(251,113,133,.1);border:1px solid rgba(251,113,133,.35);color:#ffc9d1;padding:12px 14px;border-radius:8px;font-size:12.5px;margin-bottom:14px;line-height:1.5;}
+
   footer{color:var(--sub);font-size:11px;font-family:var(--mono);margin-top:28px;}
 </style>
 </head>
 <body>
 <div id="app">
   <nav id="side">
-    <div class="brand"><b>PMO Tracker</b><div class="sub">daily work, one place</div></div>
+    <div class="brand"><b id="brand-name">PMO Workspace</b><div class="sub">daily work, one place</div></div>
     <button class="navbtn active" id="nav-myday">☀ My Day</button>
     <button class="navbtn" id="nav-dashboard">▤ Dashboard</button>
     <button class="navbtn" id="nav-sticky">✎ Sticky Notes</button>
     <button class="navbtn" id="nav-projects">▦ Projects</button>
     <div class="section-lbl">Quick jump</div>
     <div id="proj-quick"></div>
+    <div class="bottom-nav">
+      <button class="navbtn" id="nav-archive">🗄 Archive</button>
+      <button class="navbtn" id="nav-settings">⚙ Settings</button>
+    </div>
   </nav>
   <main id="main"></main>
 </div>
 
+<div id="modal-overlay"><div id="modal-box"></div></div>
+
 <script>
 let db, SQL, currentProjectId = null, currentTab = 'overview', view = 'myday';
 const $ = s => document.querySelector(s);
-const CAT_COLOR = { strategy:'violet', delivery:'cyan', ops:'amber', reporting:'rose' };
+const PALETTE = ['violet','cyan','amber','rose','emerald'];
 const STICKY_COLORS = { amber:'#FBE58A', rose:'#F9B7C4', cyan:'#A9E1F5', emerald:'#AEEBCB', violet:'#D5C4F9' };
+
+const OPTION_GROUPS = {
+  project_category: { label:'Project categories', default:['Strategy','Delivery','Ops','Reporting'] },
+  project_status:   { label:'Project statuses',   default:['On track','At risk','Blocked','Complete'] },
+  project_priority: { label:'Project priorities', default:['Low','Medium','High'] },
+  milestones_status:{ label:'Milestone statuses', default:['Not started','In progress','At risk','Done'] },
+  work_items_type:  { label:'Work item types',    default:['Feature','Report','Config','Training','Migration'] },
+  work_items_status:{ label:'Work item statuses', default:['To do','In progress','Review','Done'] },
+  requests_type:    { label:'Request types',      default:['Support','Service request','Incident'] },
+  requests_priority:{ label:'Request priorities', default:['Low','Medium','High','Critical'] },
+  requests_status:  { label:'Request statuses',   default:['Open','In progress','Resolved','Closed'] },
+  docs_category:    { label:'Doc categories',     default:['SOP','Design','Meeting notes','Policy','Guide'] },
+  raid_type:        { label:'RAID types',         default:['Risk','Assumption','Issue','Dependency'] },
+  raid_impact:      { label:'RAID impact levels', default:['Low','Medium','High'] },
+  raid_status:      { label:'RAID statuses',      default:['Open','Mitigated','Closed'] }
+};
 
 const TRACKERS = {
   milestones: { label:'Milestones', dateField:'due_date',
@@ -140,40 +205,45 @@ const TRACKERS = {
       {key:'title', label:'Milestone', type:'text', ph:'e.g. Phase 1 sign-off'},
       {key:'due_date', label:'Due', type:'date'},
       {key:'owner', label:'Owner', type:'text', ph:'Owner'},
-      {key:'status', label:'Status', type:'select', options:['Not started','In progress','At risk','Done']}
+      {key:'status', label:'Status', type:'select', group:'milestones_status'},
+      {key:'notes', label:'Notes', type:'text', ph:'Notes (optional)', modalOnly:true}
     ]},
   work_items: { label:'Deliverables / Work Items', dateField:'due_date',
     columns:[
       {key:'title', label:'Item', type:'text', ph:'e.g. UAT test plan'},
-      {key:'type', label:'Type', type:'select', options:['Feature','Report','Config','Training','Migration']},
+      {key:'type', label:'Type', type:'select', group:'work_items_type'},
       {key:'owner', label:'Owner', type:'text', ph:'Owner'},
       {key:'due_date', label:'Due', type:'date'},
-      {key:'status', label:'Status', type:'select', options:['To do','In progress','Review','Done']}
+      {key:'status', label:'Status', type:'select', group:'work_items_status'},
+      {key:'notes', label:'Notes', type:'text', ph:'Notes (optional)', modalOnly:true}
     ]},
   requests: { label:'Support & Service Requests', dateField:'date',
     columns:[
       {key:'title', label:'Request', type:'text', ph:'e.g. Access request'},
-      {key:'type', label:'Type', type:'select', options:['Support','Service request','Incident']},
-      {key:'priority', label:'Priority', type:'select', options:['Low','Medium','High','Critical']},
+      {key:'type', label:'Type', type:'select', group:'requests_type'},
+      {key:'priority', label:'Priority', type:'select', group:'requests_priority'},
       {key:'requester', label:'Requester', type:'text', ph:'Requester'},
       {key:'date', label:'Date', type:'date'},
-      {key:'status', label:'Status', type:'select', options:['Open','In progress','Resolved','Closed']}
+      {key:'status', label:'Status', type:'select', group:'requests_status'},
+      {key:'notes', label:'Notes', type:'text', ph:'Notes (optional)', modalOnly:true}
     ]},
   docs: { label:'Internal Documentation', dateField:'updated_at',
     columns:[
       {key:'title', label:'Document', type:'text', ph:'e.g. Onboarding SOP'},
-      {key:'category', label:'Category', type:'select', options:['SOP','Design','Meeting notes','Policy','Guide']},
+      {key:'category', label:'Category', type:'select', group:'docs_category'},
       {key:'owner', label:'Owner', type:'text', ph:'Owner'},
       {key:'updated_at', label:'Updated', type:'date'},
-      {key:'link', label:'Link', type:'text', ph:'URL (optional)'}
+      {key:'link', label:'Link', type:'text', ph:'URL (optional)'},
+      {key:'notes', label:'Notes', type:'text', ph:'Notes (optional)', modalOnly:true}
     ]},
   raid: { label:'RAID Log', dateField:null,
     columns:[
-      {key:'type', label:'Type', type:'select', options:['Risk','Assumption','Issue','Dependency']},
+      {key:'type', label:'Type', type:'select', group:'raid_type'},
       {key:'description', label:'Description', type:'text', ph:'Describe it', wide:true},
       {key:'owner', label:'Owner', type:'text', ph:'Owner'},
-      {key:'impact', label:'Impact', type:'select', options:['Low','Medium','High']},
-      {key:'status', label:'Status', type:'select', options:['Open','Mitigated','Closed']}
+      {key:'impact', label:'Impact', type:'select', group:'raid_impact'},
+      {key:'status', label:'Status', type:'select', group:'raid_status'},
+      {key:'notes', label:'Notes', type:'text', ph:'Notes (optional)', modalOnly:true}
     ]}
 };
 const OPEN_TERMS = new Set(['Not started','In progress','At risk','To do','Review','Open']);
@@ -195,16 +265,19 @@ async function initDB(){
   if(!loaded){
     db = new SQL.Database();
     db.run(`
-      CREATE TABLE projects(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, category TEXT, color TEXT, created_at TEXT);
-      CREATE TABLE milestones(id INTEGER PRIMARY KEY AUTOINCREMENT, project_id INTEGER, title TEXT, due_date TEXT, owner TEXT, status TEXT);
-      CREATE TABLE work_items(id INTEGER PRIMARY KEY AUTOINCREMENT, project_id INTEGER, title TEXT, type TEXT, owner TEXT, due_date TEXT, status TEXT);
-      CREATE TABLE requests(id INTEGER PRIMARY KEY AUTOINCREMENT, project_id INTEGER, title TEXT, type TEXT, priority TEXT, requester TEXT, date TEXT, status TEXT);
-      CREATE TABLE docs(id INTEGER PRIMARY KEY AUTOINCREMENT, project_id INTEGER, title TEXT, category TEXT, owner TEXT, updated_at TEXT, link TEXT);
-      CREATE TABLE raid(id INTEGER PRIMARY KEY AUTOINCREMENT, project_id INTEGER, type TEXT, description TEXT, owner TEXT, impact TEXT, status TEXT);
+      CREATE TABLE projects(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, description TEXT, category TEXT, owner TEXT,
+        start_date TEXT, target_date TEXT, status TEXT, priority TEXT, client TEXT, color TEXT,
+        archived INTEGER DEFAULT 0, favorite INTEGER DEFAULT 0, created_at TEXT);
+      CREATE TABLE milestones(id INTEGER PRIMARY KEY AUTOINCREMENT, project_id INTEGER, title TEXT, due_date TEXT, owner TEXT, status TEXT, notes TEXT);
+      CREATE TABLE work_items(id INTEGER PRIMARY KEY AUTOINCREMENT, project_id INTEGER, title TEXT, type TEXT, owner TEXT, due_date TEXT, status TEXT, notes TEXT);
+      CREATE TABLE requests(id INTEGER PRIMARY KEY AUTOINCREMENT, project_id INTEGER, title TEXT, type TEXT, priority TEXT, requester TEXT, date TEXT, status TEXT, notes TEXT);
+      CREATE TABLE docs(id INTEGER PRIMARY KEY AUTOINCREMENT, project_id INTEGER, title TEXT, category TEXT, owner TEXT, updated_at TEXT, link TEXT, notes TEXT);
+      CREATE TABLE raid(id INTEGER PRIMARY KEY AUTOINCREMENT, project_id INTEGER, type TEXT, description TEXT, owner TEXT, impact TEXT, status TEXT, notes TEXT);
       CREATE TABLE sticky_notes(id INTEGER PRIMARY KEY AUTOINCREMENT, content TEXT, color TEXT, created_at TEXT);
       CREATE TABLE settings(key TEXT PRIMARY KEY, value TEXT);
     `);
-    db.run(`INSERT INTO projects(name,category,color,created_at) VALUES ('BI Platform Migration','delivery','cyan',date('now'))`);
+    db.run(`INSERT INTO projects(name,description,category,owner,start_date,target_date,status,priority,client,color,archived,favorite,created_at)
+      VALUES ('BI Platform Migration','Migrate legacy reporting to the new BI stack','Delivery','You',date('now'),date('now','+30 day'),'On track','High','Internal','cyan',0,1,date('now'))`);
     const pid = q('SELECT last_insert_rowid() AS id')[0].id;
     db.run(`INSERT INTO milestones(project_id,title,due_date,owner,status) VALUES (?,?,?,?,?)`,[pid,'Requirements sign-off','2026-09-10','You','In progress']);
     db.run(`INSERT INTO work_items(project_id,title,type,owner,due_date,status) VALUES (?,?,?,?,?,?)`,[pid,'Draft migration runbook','Report','You','2026-09-06','To do']);
@@ -212,11 +285,15 @@ async function initDB(){
     db.run(`INSERT INTO raid(project_id,type,description,owner,impact,status) VALUES (?,?,?,?,?,?)`,[pid,'Risk','Vendor delivery slip could push go-live','You','High','Open']);
     db.run(`INSERT INTO sticky_notes(content,color,created_at) VALUES (?,?,datetime('now'))`,['Welcome! Pin quick thoughts here — nothing formal.','amber']);
   }
-  // migrate: ensure settings/sticky tables exist even on older saved DBs
-  try{ db.run(`CREATE TABLE IF NOT EXISTS sticky_notes(id INTEGER PRIMARY KEY AUTOINCREMENT, content TEXT, color TEXT, created_at TEXT)`); }catch(e){}
-  try{ db.run(`CREATE TABLE IF NOT EXISTS settings(key TEXT PRIMARY KEY, value TEXT)`); }catch(e){}
+  // migrations for DBs saved by older versions
+  const alt = (sql)=>{ try{ db.run(sql); }catch(e){} };
+  ['description TEXT','owner TEXT','start_date TEXT','target_date TEXT','status TEXT','priority TEXT','client TEXT','archived INTEGER DEFAULT 0','favorite INTEGER DEFAULT 0']
+    .forEach(col=> alt(`ALTER TABLE projects ADD COLUMN ${col}`));
+  Object.keys(TRACKERS).forEach(t=> alt(`ALTER TABLE ${t} ADD COLUMN notes TEXT`));
+  alt(`CREATE TABLE IF NOT EXISTS sticky_notes(id INTEGER PRIMARY KEY AUTOINCREMENT, content TEXT, color TEXT, created_at TEXT)`);
+  alt(`CREATE TABLE IF NOT EXISTS settings(key TEXT PRIMARY KEY, value TEXT)`);
 
-  currentProjectId = q('SELECT id FROM projects ORDER BY id LIMIT 1')[0]?.id || null;
+  currentProjectId = q('SELECT id FROM projects WHERE archived=0 ORDER BY id LIMIT 1')[0]?.id || null;
   renderSidebar();
   renderMain();
 }
@@ -236,29 +313,49 @@ function q(sql, params=[]){
 function esc(s){ const d=document.createElement('div'); d.textContent=s??''; return d.innerHTML; }
 function getSetting(key, fallback){ const r = q('SELECT value FROM settings WHERE key=?',[key]); return r.length ? r[0].value : fallback; }
 function setSetting(key, value){ db.run('INSERT INTO settings(key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value',[key,value]); persist(); }
+function getOptions(group){
+  const raw = getSetting('opts_'+group, null);
+  if(raw){ try{ return JSON.parse(raw); }catch(e){} }
+  return OPTION_GROUPS[group] ? [...OPTION_GROUPS[group].default] : [];
+}
+function setOptions(group, arr){ setSetting('opts_'+group, JSON.stringify(arr)); }
+function colorForIndex(i){ return PALETTE[i % PALETTE.length]; }
+
+// ---------------- modal ----------------
+function openModal(html){ $('#modal-box').innerHTML = html; $('#modal-overlay').classList.add('open'); }
+function closeModal(){ $('#modal-overlay').classList.remove('open'); }
+$('#modal-overlay').addEventListener('click', (e)=>{ if(e.target.id==='modal-overlay') closeModal(); });
 
 // ---------------- sidebar ----------------
 function renderSidebar(){
-  const projects = q('SELECT * FROM projects ORDER BY id');
+  $('#brand-name').textContent = getSetting('workspace_name','PMO Workspace');
+  const projects = q('SELECT * FROM projects WHERE archived=0 ORDER BY favorite DESC, id');
   $('#proj-quick').innerHTML = projects.map(p=>`
-    <button class="navbtn ${view==='project' && p.id===p.id && currentProjectId===p.id ? 'active':''}" onclick="selectProject(${p.id})">
-      <span class="dot" style="background:var(--${p.color});"></span><span></span>
+    <button class="navbtn ${view==='project' && currentProjectId===p.id ? 'active':''}" onclick="selectProject(${p.id})">
+      <span class="dot" style="background:var(--${p.color||'violet'});"></span><span></span>
     </button>`).join('');
   $('#proj-quick').querySelectorAll('.navbtn span:nth-child(2)').forEach((el,i)=> el.textContent = projects[i].name);
-  ['myday','dashboard','sticky','projects'].forEach(v=> $('#nav-'+v).classList.toggle('active', view===v));
+  ['myday','dashboard','sticky','projects','archive','settings'].forEach(v=>{
+    const el = document.getElementById('nav-'+v);
+    if(el) el.classList.toggle('active', view===v);
+  });
 }
 window.selectProject = function(id){ currentProjectId = id; view='project'; currentTab='overview'; renderSidebar(); renderMain(); };
 $('#nav-myday').addEventListener('click', ()=>{ view='myday'; renderSidebar(); renderMain(); });
 $('#nav-dashboard').addEventListener('click', ()=>{ view='dashboard'; renderSidebar(); renderMain(); });
 $('#nav-sticky').addEventListener('click', ()=>{ view='sticky'; renderSidebar(); renderMain(); });
 $('#nav-projects').addEventListener('click', ()=>{ view='projects'; renderSidebar(); renderMain(); });
+$('#nav-archive').addEventListener('click', ()=>{ view='archive'; renderSidebar(); renderMain(); });
+$('#nav-settings').addEventListener('click', ()=>{ view='settings'; renderSidebar(); renderMain(); });
 
 // ---------------- router ----------------
 function renderMain(){
   if(view==='myday') return renderMyDay();
   if(view==='dashboard') return renderDashboard();
   if(view==='sticky') return renderSticky();
-  if(view==='projects') return renderProjectsGrid();
+  if(view==='projects') return renderProjectsGrid(false);
+  if(view==='archive') return renderProjectsGrid(true);
+  if(view==='settings') return renderSettings();
   return renderProject();
 }
 
@@ -272,20 +369,20 @@ function greeting(){
 function renderMyDay(){
   const today = new Date().toISOString().slice(0,10);
   const name = getSetting('user_name','Yahiya');
-  const projMap = Object.fromEntries(q('SELECT * FROM projects').map(p=>[p.id,p]));
+  const projMap = Object.fromEntries(q('SELECT * FROM projects WHERE archived=0').map(p=>[p.id,p]));
   const items = [];
   q(`SELECT * FROM milestones WHERE status!='Done' AND due_date IS NOT NULL AND due_date<=date(?, '+6 day') ORDER BY due_date`,[today])
-    .forEach(r=> items.push({kind:'Milestone', title:r.title, date:r.due_date, project:projMap[r.project_id]}));
+    .forEach(r=>{ if(projMap[r.project_id]) items.push({kind:'Milestone', title:r.title, date:r.due_date, project:projMap[r.project_id]}); });
   q(`SELECT * FROM work_items WHERE status!='Done' AND due_date IS NOT NULL AND due_date<=date(?, '+6 day') ORDER BY due_date`,[today])
-    .forEach(r=> items.push({kind:'Work item', title:r.title, date:r.due_date, project:projMap[r.project_id]}));
+    .forEach(r=>{ if(projMap[r.project_id]) items.push({kind:'Work item', title:r.title, date:r.due_date, project:projMap[r.project_id]}); });
   q(`SELECT * FROM requests WHERE status IN ('Open','In progress') ORDER BY date`)
-    .forEach(r=> items.push({kind:'Request', title:r.title, date:r.date, project:projMap[r.project_id]}));
+    .forEach(r=>{ if(projMap[r.project_id]) items.push({kind:'Request', title:r.title, date:r.date, project:projMap[r.project_id]}); });
   items.sort((a,b)=> (a.date||'9999').localeCompare(b.date||'9999'));
 
   const openRaid = q(`SELECT COUNT(*) c FROM raid WHERE status='Open'`)[0].c;
   const openReq = q(`SELECT COUNT(*) c FROM requests WHERE status IN ('Open','In progress')`)[0].c;
   const overdueMs = q(`SELECT COUNT(*) c FROM milestones WHERE status!='Done' AND due_date<date(?)`,[today])[0].c;
-  const projCount = q('SELECT COUNT(*) c FROM projects')[0].c;
+  const projCount = q('SELECT COUNT(*) c FROM projects WHERE archived=0')[0].c;
 
   $('#main').innerHTML = `
     <div id="greet">
@@ -319,7 +416,7 @@ function renderMyDay(){
 
 // ---------------- Dashboard ----------------
 function renderDashboard(){
-  const projects = q('SELECT * FROM projects');
+  const projects = q('SELECT * FROM projects WHERE archived=0');
   const trackerCounts = Object.keys(TRACKERS).map(key=>{
     const rows = q(`SELECT * FROM ${key}`);
     return { key, label:TRACKERS[key].label, total: rows.length, open: rows.filter(r=>OPEN_TERMS.has(r.status)).length };
@@ -330,10 +427,10 @@ function renderDashboard(){
   const catCounts = {};
   projects.forEach(p=> catCounts[p.category] = (catCounts[p.category]||0)+1);
   const catTotal = projects.length || 1;
+  const catOptions = getOptions('project_category');
 
   const raidByType = {};
   q('SELECT * FROM raid').forEach(r=> raidByType[r.type] = (raidByType[r.type]||0)+1);
-  const raidTotal = Math.max(1, Object.values(raidByType).reduce((a,b)=>a+b,0));
 
   $('#main').innerHTML = `
     <div class="ph"><h1>Dashboard</h1></div>
@@ -341,7 +438,7 @@ function renderDashboard(){
     <div class="dash-grid">
       <div>
         <div class="dash-card">
-          <h3>Items per tracker (open vs total)</h3>
+          <h3>Items per tracker (open / total)</h3>
           ${trackerCounts.map(t=>`
             <div class="bar-row">
               <div class="name">${t.label}</div>
@@ -351,9 +448,10 @@ function renderDashboard(){
         </div>
         <div class="dash-card">
           <h3>RAID breakdown</h3>
-          ${Object.keys(raidByType).length ? Object.entries(raidByType).map(([type,n])=>{
-            const colors = {Risk:'rose',Assumption:'amber',Issue:'violet',Dependency:'cyan'};
-            return `<div class="donut-row"><span class="swatch" style="background:var(--${colors[type]||'cyan'});"></span>${type}<span class="n">${n}</span></div>`;
+          ${Object.keys(raidByType).length ? Object.entries(raidByType).map(([type,n],i)=>{
+            const raidTypes = getOptions('raid_type');
+            const color = colorForIndex(raidTypes.indexOf(type)>=0?raidTypes.indexOf(type):i);
+            return `<div class="donut-row"><span class="swatch" style="background:var(--${color});"></span>${esc(type)}<span class="n">${n}</span></div>`;
           }).join('') : '<div class="empty">No RAID entries yet.</div>'}
         </div>
       </div>
@@ -361,14 +459,14 @@ function renderDashboard(){
         <div class="dash-card">
           <h3>Projects by category</h3>
           ${Object.keys(catCounts).length ? Object.entries(catCounts).map(([cat,n])=>{
-            const color = CAT_COLOR[cat]||'violet';
-            return `<div class="bar-row"><div class="name">${cat}</div><div class="bar-track"><div class="bar-fill" style="width:${(n/catTotal*100)}%;background:var(--${color});"></div></div><div class="val">${n}</div></div>`;
+            const color = colorForIndex(catOptions.indexOf(cat)>=0?catOptions.indexOf(cat):0);
+            return `<div class="bar-row"><div class="name">${esc(cat)}</div><div class="bar-track"><div class="bar-fill" style="width:${(n/catTotal*100)}%;background:var(--${color});"></div></div><div class="val">${n}</div></div>`;
           }).join('') : '<div class="empty">No projects yet.</div>'}
         </div>
         <div class="dash-card">
           <h3>Quick totals</h3>
           <div class="stat-grid" style="grid-template-columns:1fr 1fr;">
-            <div class="stat-card"><div class="num">${projects.length}</div><div class="lbl">projects</div></div>
+            <div class="stat-card"><div class="num">${projects.length}</div><div class="lbl">active projects</div></div>
             <div class="stat-card"><div class="num">${q('SELECT COUNT(*) c FROM sticky_notes')[0].c}</div><div class="lbl">sticky notes</div></div>
           </div>
         </div>
@@ -413,45 +511,168 @@ function renderSticky(){
 }
 window.delSticky = function(id){ db.run('DELETE FROM sticky_notes WHERE id=?',[id]); renderSticky(); persist(); };
 
-// ---------------- Projects grid ----------------
-function renderProjectsGrid(){
-  const projects = q('SELECT * FROM projects ORDER BY id DESC');
+// ---------------- Projects grid (+ archive) ----------------
+function renderProjectsGrid(archived){
+  const projects = q(`SELECT * FROM projects WHERE archived=? ORDER BY favorite DESC, id DESC`,[archived?1:0]);
   $('#main').innerHTML = `
-    <div class="ph"><h1>Projects</h1></div>
-    <p class="lede">Click a project to open its milestones, work items, requests, docs and RAID log</p>
-    <div class="add-row" id="add-proj-row">
+    <div class="ph"><h1>${archived?'Archive':'Projects'}</h1></div>
+    <p class="lede">${archived ? 'Archived projects — restore or delete permanently.' : 'Click a project to open it. Use ⋯ to edit, duplicate, archive, favorite or delete.'}</p>
+    ${archived ? '' : `<div class="add-row" id="add-proj-row">
       <input id="np-name" placeholder="New project name" style="flex:2;min-width:180px;">
-      <select id="np-cat">
-        <option value="strategy">Strategy</option>
-        <option value="delivery">Delivery</option>
-        <option value="ops">Ops</option>
-        <option value="reporting">Reporting</option>
-      </select>
+      <select id="np-cat">${getOptions('project_category').map(c=>`<option>${esc(c)}</option>`).join('')}</select>
       <button id="np-add">+ Add project</button>
-    </div>
+    </div>`}
     <div class="proj-grid" id="proj-grid"></div>
     <footer>SQLite in-browser · autosaves on every change</footer>
   `;
   const grid = $('#proj-grid');
-  grid.innerHTML = projects.length ? projects.map(p=>{
+  grid.innerHTML = projects.length ? projects.map((p,i)=>{
     const openCount = Object.keys(TRACKERS).reduce((sum,key)=> sum + q(`SELECT * FROM ${key} WHERE project_id=?`,[p.id]).filter(r=>OPEN_TERMS.has(r.status)).length, 0);
-    return `<div class="proj-card" style="border-top-color:var(--${p.color});" data-id="${p.id}">
-      <div class="name"></div>
-      <span class="pill" style="background:var(--${p.color}-soft);color:var(--${p.color});"></span>
-      <div class="meta"><span>${p.category}</span><span class="open-count">${openCount} open</span></div>
+    return `<div class="proj-card" style="border-top-color:var(--${p.color||'violet'});" data-id="${p.id}">
+      <div class="card-top">
+        <div class="name"><span class="star">${p.favorite?'★':''}</span><span class="nm"></span></div>
+        <button class="menu-btn" data-menu="${p.id}">⋯</button>
+      </div>
+      <div class="pills">
+        <span class="pill" style="background:var(--${p.color}-soft);color:var(--${p.color});"></span>
+        ${p.status?`<span class="pill" style="background:var(--panel2);color:var(--sub);"></span>`:''}
+      </div>
+      <div class="meta"><span></span><span class="open-count">${openCount} open</span></div>
+      <div class="card-menu" id="menu-${p.id}">
+        ${archived ? `
+          <button data-act="restore">↩ Restore</button>
+          <button data-act="delete" class="danger">🗑 Delete permanently</button>
+        ` : `
+          <button data-act="edit">✏️ Edit project</button>
+          <button data-act="duplicate">📋 Duplicate</button>
+          <button data-act="favorite">⭐ ${p.favorite?'Unfavorite':'Favorite'}</button>
+          <button data-act="archive">📦 Archive</button>
+          <button data-act="delete" class="danger">🗑 Delete</button>
+        `}
+      </div>
     </div>`;
-  }).join('') : '<div class="empty">No projects yet — add one above.</div>';
+  }).join('') : `<div class="empty">${archived?'Nothing archived.':'No projects yet — add one above.'}</div>`;
+
   grid.querySelectorAll('.proj-card').forEach((el,i)=>{
-    el.querySelector('.name').textContent = projects[i].name;
-    el.querySelector('.pill').textContent = projects[i].category;
-    el.addEventListener('click', ()=> selectProject(projects[i].id));
+    const p = projects[i];
+    el.querySelector('.nm').textContent = p.name;
+    el.querySelector('.pill').textContent = p.category || '—';
+    if(p.status) el.querySelectorAll('.pill')[1].textContent = p.status;
+    el.querySelector('.meta span').textContent = p.client || p.owner || '';
+    el.addEventListener('click', (e)=>{
+      if(e.target.closest('.menu-btn') || e.target.closest('.card-menu')) return;
+      selectProject(p.id);
+    });
+    el.querySelector('.menu-btn').addEventListener('click',(e)=>{
+      e.stopPropagation();
+      document.querySelectorAll('.card-menu.open').forEach(m=>{ if(m.id!=='menu-'+p.id) m.classList.remove('open'); });
+      el.querySelector('.card-menu').classList.toggle('open');
+    });
+    el.querySelectorAll('.card-menu button').forEach(btn=>{
+      btn.addEventListener('click',(e)=>{
+        e.stopPropagation();
+        handleProjectAction(btn.dataset.act, p);
+      });
+    });
   });
-  $('#np-add').addEventListener('click', ()=>{
-    const name = $('#np-name').value.trim();
-    const cat = $('#np-cat').value;
-    if(!name) return;
-    db.run('INSERT INTO projects(name,category,color,created_at) VALUES (?,?,?,date(\'now\'))',[name,cat,CAT_COLOR[cat]]);
-    persist(); renderSidebar(); renderProjectsGrid();
+  document.addEventListener('click', ()=> document.querySelectorAll('.card-menu.open').forEach(m=>m.classList.remove('open')), {once:true});
+
+  if(!archived){
+    $('#np-add').addEventListener('click', ()=>{
+      const name = $('#np-name').value.trim();
+      const cat = $('#np-cat').value;
+      if(!name) return;
+      const idx = getOptions('project_category').indexOf(cat);
+      db.run(`INSERT INTO projects(name,description,category,owner,start_date,target_date,status,priority,client,color,archived,favorite,created_at)
+        VALUES (?,?,?,?,?,?,?,?,?,?,0,0,date('now'))`,
+        [name,'',cat,'',null,null,getOptions('project_status')[0]||'','Medium','',colorForIndex(idx>=0?idx:0)]);
+      persist(); renderSidebar(); renderProjectsGrid(false);
+    });
+  }
+}
+
+function handleProjectAction(act, p){
+  if(act==='favorite'){ db.run('UPDATE projects SET favorite=? WHERE id=?',[p.favorite?0:1,p.id]); persist(); renderSidebar(); renderProjectsGrid(view==='archive'); return; }
+  if(act==='archive'){ db.run('UPDATE projects SET archived=1 WHERE id=?',[p.id]); persist(); renderSidebar(); renderProjectsGrid(false); return; }
+  if(act==='restore'){ db.run('UPDATE projects SET archived=0 WHERE id=?',[p.id]); persist(); renderSidebar(); renderProjectsGrid(true); return; }
+  if(act==='duplicate'){ duplicateProject(p); return; }
+  if(act==='edit'){ openEditProjectModal(p); return; }
+  if(act==='delete'){ openDeleteProjectModal(p); return; }
+}
+
+function duplicateProject(p){
+  db.run(`INSERT INTO projects(name,description,category,owner,start_date,target_date,status,priority,client,color,archived,favorite,created_at)
+    VALUES (?,?,?,?,?,?,?,?,?,?,0,0,date('now'))`,
+    [p.name+' (copy)', p.description, p.category, p.owner, p.start_date, p.target_date, p.status, p.priority, p.client, p.color]);
+  const newId = q('SELECT last_insert_rowid() AS id')[0].id;
+  Object.keys(TRACKERS).forEach(key=>{
+    const cols = q(`SELECT * FROM ${key} WHERE project_id=?`,[p.id]);
+    cols.forEach(row=>{
+      const fields = TRACKERS[key].columns.map(c=>c.key);
+      const vals = fields.map(f=>row[f]);
+      db.run(`INSERT INTO ${key}(project_id,${fields.join(',')}) VALUES (?,${fields.map(()=>'?').join(',')})`,[newId,...vals]);
+    });
+  });
+  persist(); renderSidebar(); renderProjectsGrid(false);
+}
+
+function openEditProjectModal(p){
+  const catOpts = getOptions('project_category'), statusOpts = getOptions('project_status'), prioOpts = getOptions('project_priority');
+  openModal(`
+    <h2>Edit project</h2>
+    <div class="mlede">Change any field — nothing here needs code.</div>
+    <div class="mfield"><label>Name</label><input id="ef-name" value="${esc(p.name)}"></div>
+    <div class="mfield"><label>Description</label><textarea id="ef-desc">${esc(p.description)}</textarea></div>
+    <div class="mrow2">
+      <div class="mfield"><label>Category</label><select id="ef-cat">${catOpts.map(c=>`<option ${c===p.category?'selected':''}>${esc(c)}</option>`).join('')}</select></div>
+      <div class="mfield"><label>Status</label><select id="ef-status">${statusOpts.map(c=>`<option ${c===p.status?'selected':''}>${esc(c)}</option>`).join('')}</select></div>
+    </div>
+    <div class="mrow2">
+      <div class="mfield"><label>Priority</label><select id="ef-prio">${prioOpts.map(c=>`<option ${c===p.priority?'selected':''}>${esc(c)}</option>`).join('')}</select></div>
+      <div class="mfield"><label>Owner</label><input id="ef-owner" value="${esc(p.owner)}"></div>
+    </div>
+    <div class="mrow2">
+      <div class="mfield"><label>Start date</label><input type="date" id="ef-start" value="${p.start_date||''}"></div>
+      <div class="mfield"><label>Target date</label><input type="date" id="ef-target" value="${p.target_date||''}"></div>
+    </div>
+    <div class="mfield"><label>Client / Organization</label><input id="ef-client" value="${esc(p.client)}"></div>
+    <div class="mfield"><label>Color</label>
+      <div class="swatch-pick" id="ef-color">${PALETTE.map(c=>`<div class="sw ${c===p.color?'sel':''}" data-c="${c}" style="background:var(--${c});"></div>`).join('')}</div>
+    </div>
+    <div class="mactions">
+      <button class="btn-primary" id="ef-save">Save changes</button>
+      <button class="btn-ghost" onclick="closeModal()">Cancel</button>
+    </div>
+  `);
+  let chosenColor = p.color;
+  $('#ef-color').querySelectorAll('.sw').forEach(sw=> sw.addEventListener('click', ()=>{
+    $('#ef-color').querySelectorAll('.sw').forEach(s=>s.classList.remove('sel'));
+    sw.classList.add('sel'); chosenColor = sw.dataset.c;
+  }));
+  $('#ef-save').addEventListener('click', ()=>{
+    db.run(`UPDATE projects SET name=?,description=?,category=?,status=?,priority=?,owner=?,start_date=?,target_date=?,client=?,color=? WHERE id=?`,
+      [$('#ef-name').value.trim()||p.name, $('#ef-desc').value, $('#ef-cat').value, $('#ef-status').value, $('#ef-prio').value,
+       $('#ef-owner').value, $('#ef-start').value||null, $('#ef-target').value||null, $('#ef-client').value, chosenColor, p.id]);
+    persist(); closeModal(); renderSidebar();
+    if(view==='project') renderProject(); else renderProjectsGrid(false);
+  });
+}
+
+function openDeleteProjectModal(p){
+  openModal(`
+    <h2>Delete "${esc(p.name)}"?</h2>
+    <div class="warn-box">This permanently deletes the project and all associated milestones, work items, requests, documentation and RAID entries. This can't be undone.</div>
+    <div class="mactions">
+      <button class="btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn-danger" id="confirm-del">Delete project</button>
+    </div>
+  `);
+  $('#confirm-del').addEventListener('click', ()=>{
+    Object.keys(TRACKERS).forEach(key=> db.run(`DELETE FROM ${key} WHERE project_id=?`,[p.id]));
+    db.run('DELETE FROM projects WHERE id=?',[p.id]);
+    persist(); closeModal();
+    if(currentProjectId===p.id) currentProjectId = q('SELECT id FROM projects WHERE archived=0 LIMIT 1')[0]?.id || null;
+    renderSidebar(); renderProjectsGrid(view==='archive');
   });
 }
 
@@ -463,16 +684,25 @@ function renderProject(){
   $('#main').innerHTML = `
     <p class="lede" style="margin-bottom:4px;"><a href="#" id="back-projects" style="color:var(--sub);text-decoration:none;">← All projects</a></p>
     <div class="ph">
-      <h1></h1>
-      <span class="pill" style="background:var(--${p.color}-soft);color:var(--${p.color});"></span>
+      <h1><span id="proj-title-view"></span></h1>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span class="pill" style="background:var(--${p.color}-soft);color:var(--${p.color});"></span>
+        <button class="menu-btn" id="proj-edit-btn" style="all:unset;cursor:pointer;color:var(--sub);font-size:16px;padding:2px 8px;border-radius:6px;">⋯</button>
+      </div>
     </div>
-    <p class="lede">Project workspace — milestones, work items, requests, docs and RAID all in one place</p>
+    <p class="lede">${esc(p.description||'')||'Project workspace — milestones, work items, requests, docs and RAID all in one place'}</p>
     <div id="tabs">${tabDefs.map(([k,l])=>`<button data-tab="${k}" class="${k===currentTab?'active':''}">${l}</button>`).join('')}</div>
     <div id="tab-body"></div>
     <footer>SQLite in-browser · autosaves on every change</footer>
   `;
-  $('.ph h1').textContent = p.name;
-  $('.ph .pill').textContent = p.category;
+  $('#proj-title-view').textContent = p.name;
+  $('#proj-title-view').title = 'Double-click to rename';
+  $('#proj-title-view').addEventListener('dblclick', ()=>{
+    const val = prompt('Rename project', p.name);
+    if(val && val.trim()){ db.run('UPDATE projects SET name=? WHERE id=?',[val.trim(), p.id]); persist(); renderSidebar(); renderProject(); }
+  });
+  $('.ph .pill').textContent = p.category || '—';
+  $('#proj-edit-btn').addEventListener('click', ()=> openEditProjectModal(p));
   $('#back-projects').addEventListener('click', (e)=>{ e.preventDefault(); view='projects'; renderSidebar(); renderMain(); });
   $('#tabs').querySelectorAll('button').forEach(b=>{
     b.addEventListener('click', ()=>{ currentTab = b.dataset.tab; renderProject(); });
@@ -490,61 +720,184 @@ function renderOverviewTab(p){
     <div class="stat-grid">
       ${counts.map(c=>`<div class="stat-card"><div class="num">${c.total}</div><div class="lbl">${c.label} · ${c.open} open</div></div>`).join('')}
     </div>
-    <p class="lede" style="margin-top:0;">Click a tab above to add or update items in this project.</p>
+    <div class="dash-card">
+      <h3>Project details</h3>
+      <div class="lede" style="margin:0;">
+        Status: <b style="color:var(--text)">${esc(p.status||'—')}</b> ·
+        Priority: <b style="color:var(--text)">${esc(p.priority||'—')}</b> ·
+        Owner: <b style="color:var(--text)">${esc(p.owner||'—')}</b> ·
+        Client: <b style="color:var(--text)">${esc(p.client||'—')}</b> ·
+        Target: <b style="color:var(--text)">${esc(p.target_date||'—')}</b>
+      </div>
+    </div>
+    <p class="lede">Click a tab above to add or update items. Click any row to edit it in full; double-click a title to rename it instantly.</p>
   `;
 }
 
 function renderTrackerTab(key, p){
   const cfg = TRACKERS[key];
   const rows = q(`SELECT * FROM ${key} WHERE project_id=? ORDER BY id DESC`,[p.id]);
-  const formFields = cfg.columns.map(c=>{
-    if(c.type==='select') return `<select data-f="${c.key}">${c.options.map(o=>`<option>${o}</option>`).join('')}</select>`;
+  const quickCols = cfg.columns.filter(c=>!c.modalOnly);
+  const formFields = quickCols.map(c=>{
+    if(c.type==='select') return `<select data-f="${c.key}">${getOptions(c.group).map(o=>`<option>${esc(o)}</option>`).join('')}</select>`;
     if(c.type==='date') return `<input type="date" data-f="${c.key}">`;
     return `<input type="text" data-f="${c.key}" placeholder="${c.ph||c.label}" style="${c.wide?'flex:2;':''}">`;
   }).join('');
   $('#tab-body').innerHTML = `
     <div class="add-row" id="add-row">${formFields}<button id="row-add">Add</button></div>
     <table>
-      <thead><tr>${cfg.columns.map(c=>`<th>${c.label}</th>`).join('')}<th></th></tr></thead>
+      <thead><tr>${quickCols.map(c=>`<th>${c.label}</th>`).join('')}<th></th></tr></thead>
       <tbody>
         ${rows.length ? rows.map(r=>`
           <tr data-id="${r.id}">
-            ${cfg.columns.map(c=>{
-              if(c.type==='select') return `<td><select class="status-cell" data-f="${c.key}">${c.options.map(o=>`<option ${o===r[c.key]?'selected':''}>${o}</option>`).join('')}</select></td>`;
+            ${quickCols.map(c=>{
+              if(c.type==='select') return `<td><select class="status-cell" data-f="${c.key}">${getOptions(c.group).map(o=>`<option ${o===r[c.key]?'selected':''}>${esc(o)}</option>`).join('')}</select></td>`;
               if(c.key==='link' && r[c.key]) return `<td><a href="${esc(r[c.key])}" target="_blank" style="color:var(--cyan);">link</a></td>`;
+              if(c.key==='title' || c.key==='description') return `<td class="row-title" data-rename="${c.key}">${esc(r[c.key])}</td>`;
               return `<td>${esc(r[c.key])}</td>`;
             }).join('')}
-            <td><button class="del-btn" onclick="delRow('${key}',${r.id})">×</button></td>
-          </tr>`).join('') : `<tr><td colspan="${cfg.columns.length+1}" class="empty">No entries yet — add one above.</td></tr>`}
+            <td><button class="del-btn" data-del="1">×</button></td>
+          </tr>`).join('') : `<tr><td colspan="${quickCols.length+1}" class="empty">No entries yet — add one above.</td></tr>`}
       </tbody>
     </table>
   `;
+  $('#tab-body').querySelectorAll('tbody tr[data-id]').forEach(tr=>{
+    const id = parseInt(tr.dataset.id);
+    const row = rows.find(r=>r.id===id);
+    tr.addEventListener('click',(e)=>{
+      if(e.target.closest('select') || e.target.closest('button')) return;
+      openRowModal(key, cfg, row, p);
+    });
+    const renameCell = tr.querySelector('[data-rename]');
+    if(renameCell){
+      renameCell.addEventListener('dblclick',(e)=>{
+        e.stopPropagation();
+        const field = renameCell.dataset.rename;
+        const val = prompt('Rename', row[field]);
+        if(val && val.trim()){ db.run(`UPDATE ${key} SET ${field}=? WHERE id=?`,[val.trim(), id]); persist(); renderTrackerTab(key,p); }
+      });
+    }
+    tr.querySelector('[data-del]').addEventListener('click',(e)=>{
+      e.stopPropagation();
+      if(confirm('Delete this item? This can\\'t be undone.')){ db.run(`DELETE FROM ${key} WHERE id=?`,[id]); persist(); renderTrackerTab(key,p); }
+    });
+  });
   $('#tab-body').querySelectorAll('tbody select.status-cell').forEach(sel=>{
-    sel.addEventListener('change', ()=>{
+    sel.addEventListener('change', (e)=>{
+      e.stopPropagation();
       const id = sel.closest('tr').dataset.id;
       db.run(`UPDATE ${key} SET ${sel.dataset.f}=? WHERE id=?`,[sel.value, id]);
       persist();
     });
+    sel.addEventListener('click', e=>e.stopPropagation());
   });
   $('#row-add').addEventListener('click', ()=>{
     const data = {};
     $('#add-row').querySelectorAll('[data-f]').forEach(el=> data[el.dataset.f]=el.value);
     if(!Object.values(data).some(v=>v && v.trim && v.trim())) return;
-    const keys = ['project_id', ...cfg.columns.map(c=>c.key)];
-    const vals = [p.id, ...cfg.columns.map(c=> data[c.key] || (c.type==='select'? c.options[0] : ''))];
+    const keys = ['project_id', ...quickCols.map(c=>c.key)];
+    const vals = [p.id, ...quickCols.map(c=> data[c.key] || (c.type==='select'? getOptions(c.group)[0] : ''))];
     db.run(`INSERT INTO ${key}(${keys.join(',')}) VALUES (${keys.map(()=>'?').join(',')})`, vals);
     renderTrackerTab(key, p);
     persist();
   });
 }
-window.delRow = function(key, id){
-  db.run(`DELETE FROM ${key} WHERE id=?`,[id]);
-  renderProject();
-  persist();
-};
+
+function openRowModal(key, cfg, row, p){
+  const fields = cfg.columns.map(c=>{
+    if(c.type==='select') return `<div class="mfield"><label>${c.label}</label><select data-mf="${c.key}">${getOptions(c.group).map(o=>`<option ${o===row[c.key]?'selected':''}>${esc(o)}</option>`).join('')}</select></div>`;
+    if(c.type==='date') return `<div class="mfield"><label>${c.label}</label><input type="date" data-mf="${c.key}" value="${row[c.key]||''}"></div>`;
+    if(c.key==='description' || c.key==='notes') return `<div class="mfield"><label>${c.label}</label><textarea data-mf="${c.key}">${esc(row[c.key])}</textarea></div>`;
+    return `<div class="mfield"><label>${c.label}</label><input data-mf="${c.key}" value="${esc(row[c.key])}"></div>`;
+  }).join('');
+  openModal(`
+    <h2>Edit ${cfg.label.toLowerCase().replace(/s$/,'')}</h2>
+    <div class="mlede">In ${esc(p.name)}</div>
+    ${fields}
+    <div class="mactions">
+      <button class="btn-primary" id="rm-save">Save changes</button>
+      <button class="btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn-danger" id="rm-del">Delete</button>
+    </div>
+  `);
+  $('#rm-save').addEventListener('click', ()=>{
+    const sets = [], vals = [];
+    document.querySelectorAll('[data-mf]').forEach(el=>{ sets.push(`${el.dataset.mf}=?`); vals.push(el.value); });
+    vals.push(row.id);
+    db.run(`UPDATE ${key} SET ${sets.join(',')} WHERE id=?`, vals);
+    persist(); closeModal(); renderTrackerTab(key, p);
+  });
+  $('#rm-del').addEventListener('click', ()=>{
+    if(confirm('Delete this item? This can\\'t be undone.')){
+      db.run(`DELETE FROM ${key} WHERE id=?`,[row.id]);
+      persist(); closeModal(); renderTrackerTab(key, p);
+    }
+  });
+}
+
+// ---------------- Settings ----------------
+function renderSettings(){
+  $('#main').innerHTML = `
+    <div class="ph"><h1>Settings</h1></div>
+    <p class="lede">Configure your workspace — types, statuses and priorities — without touching code.</p>
+    <div class="set-group">
+      <h3>Workspace</h3>
+      <div class="set-field"><label>Workspace name</label><input id="set-wsname" value="${esc(getSetting('workspace_name','PMO Workspace'))}"></div>
+      <div class="set-field"><label>Your name (used in My Day greeting)</label><input id="set-username" value="${esc(getSetting('user_name','Yahiya'))}"></div>
+      <button class="btn-primary" id="set-save-general" style="all:unset;cursor:pointer;background:var(--violet);color:#fff;font-size:12.5px;font-weight:600;padding:8px 16px;border-radius:7px;">Save</button>
+    </div>
+    <div id="opt-groups"></div>
+    <footer>SQLite in-browser · autosaves on every change</footer>
+  `;
+  $('#set-save-general').addEventListener('click', ()=>{
+    setSetting('workspace_name', $('#set-wsname').value.trim() || 'PMO Workspace');
+    setSetting('user_name', $('#set-username').value.trim() || 'Yahiya');
+    renderSidebar();
+  });
+  const container = $('#opt-groups');
+  container.innerHTML = Object.entries(OPTION_GROUPS).map(([key,def])=>`
+    <div class="set-group" data-group="${key}">
+      <h3>${def.label}</h3>
+      <div class="chips"></div>
+      <div class="opt-add"><input placeholder="Add new…" data-newopt><button data-addbtn>+ Add</button></div>
+    </div>
+  `).join('');
+  Object.keys(OPTION_GROUPS).forEach(key=> renderOptChips(key));
+}
+function renderOptChips(group){
+  const box = document.querySelector(`.set-group[data-group="${group}"] .chips`);
+  const opts = getOptions(group);
+  box.innerHTML = opts.map(o=>`<span class="opt-chip">${esc(o)}<button data-rename="${esc(o)}">✎</button><button data-del="${esc(o)}">×</button></span>`).join('');
+  box.querySelectorAll('[data-rename]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const old = btn.dataset.rename;
+      const val = prompt('Rename', old);
+      if(val && val.trim()){
+        const arr = getOptions(group).map(o=> o===old ? val.trim() : o);
+        setOptions(group, arr);
+        renderOptChips(group);
+      }
+    });
+  });
+  box.querySelectorAll('[data-del]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      if(!confirm('Remove this option?')) return;
+      const arr = getOptions(group).filter(o=> o!==btn.dataset.del);
+      setOptions(group, arr);
+      renderOptChips(group);
+    });
+  });
+  const wrap = document.querySelector(`.set-group[data-group="${group}"]`);
+  wrap.querySelector('[data-addbtn]').onclick = ()=>{
+    const input = wrap.querySelector('[data-newopt]');
+    const val = input.value.trim();
+    if(!val) return;
+    const arr = getOptions(group); arr.push(val); setOptions(group, arr);
+    input.value=''; renderOptChips(group);
+  };
+}
 
 initDB();
 </script>
 </body>
 </html>
-////lesgooooooooo SIDE QUESTS ARE GETTING REALLLL////
