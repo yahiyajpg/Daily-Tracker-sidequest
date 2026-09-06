@@ -36,6 +36,11 @@
   #corner-bar .date{font-family:var(--mono);font-size:11.5px;color:var(--sub);}
   #corner-bar #theme-toggle{all:unset;cursor:pointer;font-size:15px;line-height:1;padding:4px 6px;border-radius:8px;}
   #corner-bar #theme-toggle:hover{background:var(--panel2);}
+  #corner-bar #lock-toggle{all:unset;cursor:pointer;font-size:15px;line-height:1;padding:4px 6px;border-radius:8px;}
+  #corner-bar #lock-toggle:hover{background:var(--panel2);}
+  #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--panel3);border:1px solid var(--line);color:var(--text);padding:10px 18px;border-radius:9px;font-size:12.5px;z-index:200;opacity:0;pointer-events:none;transition:opacity .2s ease,transform .2s ease;box-shadow:0 8px 20px rgba(0,0,0,.35);}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .view-only-badge{display:inline-block;font-size:11px;background:var(--panel2);color:var(--sub);padding:3px 10px;border-radius:20px;margin-left:8px;}
   #app{display:flex;min-height:100vh;}
 
   #side{width:210px;flex-shrink:0;background:var(--panel);border-right:1px solid var(--line);padding:20px 0;display:flex;flex-direction:column;}
@@ -175,8 +180,10 @@
 <body>
 <div id="corner-bar">
   <span class="date" id="corner-date"></span>
+  <button id="lock-toggle" title="Toggle edit access">🔒</button>
   <button id="theme-toggle" title="Toggle light/dark mode">🌙</button>
 </div>
+<div id="toast"></div>
 <div id="app">
   <nav id="side">
     <div class="brand"><b id="brand-name">PMO Workspace</b><div class="sub">daily work, one place</div></div>
@@ -198,6 +205,8 @@
 
 <script>
 let db, SQL, currentProjectId = null, currentTab = 'overview', view = 'myday';
+let editMode = localStorage.getItem('pmo-editor') === 'true';
+const EDIT_PASSWORD = 'yahiya-edit-2026'; // change this before you deploy
 const $ = s => document.querySelector(s);
 const PALETTE = ['violet','cyan','amber','rose','emerald'];
 const STICKY_COLORS = { amber:'#FBE58A', rose:'#F9B7C4', cyan:'#A9E1F5', emerald:'#AEEBCB', violet:'#D5C4F9' };
@@ -343,6 +352,34 @@ $('#theme-toggle').addEventListener('click', ()=>{
   applyTheme(next);
   setSetting('theme', next);
 });
+function toast(msg){
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(()=> t.classList.remove('show'), 2200);
+}
+function requireEdit(){
+  if(!editMode){ toast('View only. This is a live demo, ask the owner for edit access.'); return false; }
+  return true;
+}
+function updateLockIcon(){ $('#lock-toggle').textContent = editMode ? '🔓' : '🔒'; }
+$('#lock-toggle').addEventListener('click', ()=>{
+  if(editMode){
+    editMode = false;
+    localStorage.removeItem('pmo-editor');
+    updateLockIcon(); toast('Switched to view-only mode.'); renderMain();
+    return;
+  }
+  const pw = prompt('Enter the edit password:');
+  if(pw === null) return;
+  if(pw === EDIT_PASSWORD){
+    editMode = true;
+    localStorage.setItem('pmo-editor','true');
+    updateLockIcon(); toast('Edit mode unlocked.'); renderMain();
+  } else {
+    toast('Wrong password.');
+  }
+});
+updateLockIcon();
 $('#corner-date').textContent = new Date().toISOString().slice(0,10);
 function getOptions(group){
   const raw = getSetting('opts_'+group, null);
@@ -417,7 +454,7 @@ function renderMyDay(){
 
   $('#main').innerHTML = `
     <div id="greet">
-      <h1>${greeting()}, <span class="editable-name" id="edit-name" title="Click to edit">${esc(name)}</span>. Let's get going ☕</h1>
+      <h1>${greeting()}, <span class="${editMode?'editable-name':''}" id="edit-name" title="${editMode?'Click to edit':''}">${esc(name)}</span>. Let's get going ☕${!editMode?'<span class="view-only-badge">View only</span>':''}</h1>
       <div class="sub">Everything due soon or open, across all projects</div>
     </div>
     <div class="stat-grid">
@@ -440,6 +477,7 @@ function renderMyDay(){
     <footer>SQLite in-browser · autosaves on every change</footer>
   `;
   $('#edit-name').addEventListener('click', ()=>{
+    if(!requireEdit()) return;
     const val = prompt('What should we call you?', name);
     if(val && val.trim()){ setSetting('user_name', val.trim()); renderMyDay(); }
   });
@@ -513,46 +551,51 @@ function renderSticky(){
   const notes = q('SELECT * FROM sticky_notes ORDER BY id DESC');
   $('#main').innerHTML = `
     <div class="ph"><h1>Sticky Notes</h1></div>
-    <p class="lede">Freeform quick-capture for reminders, ideas, and things not worth a full tracker entry</p>
-    <div id="sticky-add">
+    <p class="lede">Freeform quick-capture for reminders, ideas, and things not worth a full tracker entry${!editMode?' <span class="view-only-badge">View only</span>':''}</p>
+    ${editMode ? `<div id="sticky-add">
       <textarea id="sticky-text" placeholder="Jot something down…"></textarea>
       <div class="swatch-pick" id="swatch-pick">
         ${Object.entries(STICKY_COLORS).map(([k,hex])=>`<div class="sw ${k===stickyColor?'sel':''}" data-c="${k}" style="background:${hex};"></div>`).join('')}
       </div>
       <button id="sticky-add-btn" style="all:unset;cursor:pointer;background:var(--violet);color:#fff;font-weight:600;font-size:12.5px;padding:9px 18px;border-radius:7px;">Pin note</button>
-    </div>
+    </div>` : ''}
     <div id="sticky-board">
       ${notes.length ? notes.map(n=>`
         <div class="sticky" style="background:${STICKY_COLORS[n.color]||STICKY_COLORS.amber};">
-          <button class="del" onclick="delSticky(${n.id})">×</button>
+          ${editMode?`<button class="del" onclick="delSticky(${n.id})">×</button>`:''}
           <div class="txt"></div>
         </div>`).join('') : '<div class="empty">No sticky notes yet.</div>'}
     </div>
   `;
   $('#sticky-board').querySelectorAll('.sticky .txt').forEach((el,i)=> el.textContent = notes[i].content);
-  $('#swatch-pick').querySelectorAll('.sw').forEach(sw=>{
-    sw.addEventListener('click', ()=>{ stickyColor = sw.dataset.c; renderSticky(); });
-  });
-  $('#sticky-add-btn').addEventListener('click', ()=>{
-    const val = $('#sticky-text').value.trim();
-    if(!val) return;
-    db.run('INSERT INTO sticky_notes(content,color,created_at) VALUES (?,?,datetime(\'now\'))',[val, stickyColor]);
-    renderSticky(); persist();
-  });
+  if(editMode){
+    $('#swatch-pick').querySelectorAll('.sw').forEach(sw=>{
+      sw.addEventListener('click', ()=>{ stickyColor = sw.dataset.c; renderSticky(); });
+    });
+    $('#sticky-add-btn').addEventListener('click', ()=>{
+      const val = $('#sticky-text').value.trim();
+      if(!val) return;
+      db.run('INSERT INTO sticky_notes(content,color,created_at) VALUES (?,?,datetime(\'now\'))',[val, stickyColor]);
+      renderSticky(); persist();
+    });
+  }
 }
-window.delSticky = function(id){ db.run('DELETE FROM sticky_notes WHERE id=?',[id]); renderSticky(); persist(); };
+window.delSticky = function(id){
+  if(!requireEdit()) return;
+  db.run('DELETE FROM sticky_notes WHERE id=?',[id]); renderSticky(); persist();
+};
 
 // ---------------- Projects grid (+ archive) ----------------
 function renderProjectsGrid(archived){
   const projects = q(`SELECT * FROM projects WHERE archived=? ORDER BY favorite DESC, id DESC`,[archived?1:0]);
   $('#main').innerHTML = `
     <div class="ph"><h1>${archived?'Archive':'Projects'}</h1></div>
-    <p class="lede">${archived ? 'Archived projects — restore or delete permanently.' : 'Click a project to open it. Use ⋯ to edit, duplicate, archive, favorite or delete.'}</p>
-    ${archived ? '' : `<div class="add-row" id="add-proj-row">
+    <p class="lede">${archived ? 'Archived projects. Restore or delete permanently.' : `Click a project to open it.${editMode?' Use ⋯ to edit, duplicate, archive, favorite or delete.':' <span class="view-only-badge">View only</span>'}`}</p>
+    ${(!archived && editMode) ? `<div class="add-row" id="add-proj-row">
       <input id="np-name" placeholder="New project name" style="flex:2;min-width:180px;">
       <select id="np-cat">${getOptions('project_category').map(c=>`<option>${esc(c)}</option>`).join('')}</select>
       <button id="np-add">+ Add project</button>
-    </div>`}
+    </div>` : ''}
     <div class="proj-grid" id="proj-grid"></div>
     <footer>SQLite in-browser · autosaves on every change</footer>
   `;
@@ -562,14 +605,14 @@ function renderProjectsGrid(archived){
     return `<div class="proj-card" style="border-top-color:var(--${p.color||'violet'});" data-id="${p.id}">
       <div class="card-top">
         <div class="name"><span class="star">${p.favorite?'★':''}</span><span class="nm"></span></div>
-        <button class="menu-btn" data-menu="${p.id}">⋯</button>
+        ${editMode?`<button class="menu-btn" data-menu="${p.id}">⋯</button>`:''}
       </div>
       <div class="pills">
         <span class="pill" style="background:var(--${p.color}-soft);color:var(--${p.color});"></span>
         ${p.status?`<span class="pill" style="background:var(--panel2);color:var(--sub);"></span>`:''}
       </div>
       <div class="meta"><span></span><span class="open-count">${openCount} open</span></div>
-      <div class="card-menu" id="menu-${p.id}">
+      ${editMode ? `<div class="card-menu" id="menu-${p.id}">
         ${archived ? `
           <button data-act="restore">↩ Restore</button>
           <button data-act="delete" class="danger">🗑 Delete permanently</button>
@@ -580,7 +623,7 @@ function renderProjectsGrid(archived){
           <button data-act="archive">📦 Archive</button>
           <button data-act="delete" class="danger">🗑 Delete</button>
         `}
-      </div>
+      </div>` : ''}
     </div>`;
   }).join('') : `<div class="empty">${archived?'Nothing archived.':'No projects yet — add one above.'}</div>`;
 
@@ -588,27 +631,29 @@ function renderProjectsGrid(archived){
     const p = projects[i];
     el.querySelector('.nm').textContent = p.name;
     el.querySelector('.pill').textContent = p.category || '—';
-    if(p.status) el.querySelectorAll('.pill')[1].textContent = p.status;
+    if(p.status && el.querySelectorAll('.pill')[1]) el.querySelectorAll('.pill')[1].textContent = p.status;
     el.querySelector('.meta span').textContent = p.client || p.owner || '';
     el.addEventListener('click', (e)=>{
       if(e.target.closest('.menu-btn') || e.target.closest('.card-menu')) return;
       selectProject(p.id);
     });
-    el.querySelector('.menu-btn').addEventListener('click',(e)=>{
-      e.stopPropagation();
-      document.querySelectorAll('.card-menu.open').forEach(m=>{ if(m.id!=='menu-'+p.id) m.classList.remove('open'); });
-      el.querySelector('.card-menu').classList.toggle('open');
-    });
-    el.querySelectorAll('.card-menu button').forEach(btn=>{
-      btn.addEventListener('click',(e)=>{
+    if(editMode){
+      el.querySelector('.menu-btn').addEventListener('click',(e)=>{
         e.stopPropagation();
-        handleProjectAction(btn.dataset.act, p);
+        document.querySelectorAll('.card-menu.open').forEach(m=>{ if(m.id!=='menu-'+p.id) m.classList.remove('open'); });
+        el.querySelector('.card-menu').classList.toggle('open');
       });
-    });
+      el.querySelectorAll('.card-menu button').forEach(btn=>{
+        btn.addEventListener('click',(e)=>{
+          e.stopPropagation();
+          handleProjectAction(btn.dataset.act, p);
+        });
+      });
+    }
   });
   document.addEventListener('click', ()=> document.querySelectorAll('.card-menu.open').forEach(m=>m.classList.remove('open')), {once:true});
 
-  if(!archived){
+  if(!archived && editMode){
     $('#np-add').addEventListener('click', ()=>{
       const name = $('#np-name').value.trim();
       const cat = $('#np-cat').value;
@@ -623,6 +668,7 @@ function renderProjectsGrid(archived){
 }
 
 function handleProjectAction(act, p){
+  if(!requireEdit()) return;
   if(act==='favorite'){ db.run('UPDATE projects SET favorite=? WHERE id=?',[p.favorite?0:1,p.id]); persist(); renderSidebar(); renderProjectsGrid(view==='archive'); return; }
   if(act==='archive'){ db.run('UPDATE projects SET archived=1 WHERE id=?',[p.id]); persist(); renderSidebar(); renderProjectsGrid(false); return; }
   if(act==='restore'){ db.run('UPDATE projects SET archived=0 WHERE id=?',[p.id]); persist(); renderSidebar(); renderProjectsGrid(true); return; }
@@ -718,22 +764,24 @@ function renderProject(){
       <h1><span id="proj-title-view"></span></h1>
       <div style="display:flex;gap:8px;align-items:center;">
         <span class="pill" style="background:var(--${p.color}-soft);color:var(--${p.color});"></span>
-        <button class="menu-btn" id="proj-edit-btn" style="all:unset;cursor:pointer;color:var(--sub);font-size:16px;padding:2px 8px;border-radius:6px;">⋯</button>
+        ${editMode?`<button class="menu-btn" id="proj-edit-btn" style="all:unset;cursor:pointer;color:var(--sub);font-size:16px;padding:2px 8px;border-radius:6px;">⋯</button>`:''}
       </div>
     </div>
-    <p class="lede">${esc(p.description||'')||'Project workspace: milestones, work items, requests, docs and RAID all in one place'}</p>
+    <p class="lede">${esc(p.description||'')||'Project workspace: milestones, work items, requests, docs and RAID all in one place'}${!editMode?' <span class="view-only-badge">View only</span>':''}</p>
     <div id="tabs">${tabDefs.map(([k,l])=>`<button data-tab="${k}" class="${k===currentTab?'active':''}">${l}</button>`).join('')}</div>
     <div id="tab-body"></div>
     <footer>SQLite in-browser · autosaves on every change</footer>
   `;
   $('#proj-title-view').textContent = p.name;
-  $('#proj-title-view').title = 'Double-click to rename';
-  $('#proj-title-view').addEventListener('dblclick', ()=>{
-    const val = prompt('Rename project', p.name);
-    if(val && val.trim()){ db.run('UPDATE projects SET name=? WHERE id=?',[val.trim(), p.id]); persist(); renderSidebar(); renderProject(); }
-  });
+  if(editMode){
+    $('#proj-title-view').title = 'Double-click to rename';
+    $('#proj-title-view').addEventListener('dblclick', ()=>{
+      const val = prompt('Rename project', p.name);
+      if(val && val.trim()){ db.run('UPDATE projects SET name=? WHERE id=?',[val.trim(), p.id]); persist(); renderSidebar(); renderProject(); }
+    });
+  }
   $('.ph .pill').textContent = p.category || '—';
-  $('#proj-edit-btn').addEventListener('click', ()=> openEditProjectModal(p));
+  if(editMode) $('#proj-edit-btn').addEventListener('click', ()=> openEditProjectModal(p));
   $('#back-projects').addEventListener('click', (e)=>{ e.preventDefault(); view='projects'; renderSidebar(); renderMain(); });
   $('#tabs').querySelectorAll('button').forEach(b=>{
     b.addEventListener('click', ()=>{ currentTab = b.dataset.tab; renderProject(); });
@@ -775,20 +823,20 @@ function renderTrackerTab(key, p){
     return `<input type="text" data-f="${c.key}" placeholder="${c.ph||c.label}" style="${c.wide?'flex:2;':''}">`;
   }).join('');
   $('#tab-body').innerHTML = `
-    <div class="add-row" id="add-row">${formFields}<button id="row-add">Add</button></div>
+    ${editMode ? `<div class="add-row" id="add-row">${formFields}<button id="row-add">Add</button></div>` : ''}
     <table>
-      <thead><tr>${quickCols.map(c=>`<th>${c.label}</th>`).join('')}<th></th></tr></thead>
+      <thead><tr>${quickCols.map(c=>`<th>${c.label}</th>`).join('')}${editMode?'<th></th>':''}</tr></thead>
       <tbody>
         ${rows.length ? rows.map(r=>`
           <tr data-id="${r.id}">
             ${quickCols.map(c=>{
-              if(c.type==='select') return `<td><select class="status-cell" data-f="${c.key}">${getOptions(c.group).map(o=>`<option ${o===r[c.key]?'selected':''}>${esc(o)}</option>`).join('')}</select></td>`;
+              if(c.type==='select') return `<td><select class="status-cell" data-f="${c.key}" ${editMode?'':'disabled'}>${getOptions(c.group).map(o=>`<option ${o===r[c.key]?'selected':''}>${esc(o)}</option>`).join('')}</select></td>`;
               if(c.key==='link' && r[c.key]) return `<td><a href="${esc(r[c.key])}" target="_blank" style="color:var(--cyan);">link</a></td>`;
               if(c.key==='title' || c.key==='description') return `<td class="row-title" data-rename="${c.key}">${esc(r[c.key])}</td>`;
               return `<td>${esc(r[c.key])}</td>`;
             }).join('')}
-            <td><button class="del-btn" data-del="1">×</button></td>
-          </tr>`).join('') : `<tr><td colspan="${quickCols.length+1}" class="empty">No entries yet — add one above.</td></tr>`}
+            ${editMode?'<td><button class="del-btn" data-del="1">×</button></td>':''}
+          </tr>`).join('') : `<tr><td colspan="${quickCols.length+1}" class="empty">No entries yet${editMode?' — add one above.':'.'}</td></tr>`}
       </tbody>
     </table>
   `;
@@ -799,39 +847,44 @@ function renderTrackerTab(key, p){
       if(e.target.closest('select') || e.target.closest('button')) return;
       openRowModal(key, cfg, row, p);
     });
-    const renameCell = tr.querySelector('[data-rename]');
-    if(renameCell){
-      renameCell.addEventListener('dblclick',(e)=>{
+    if(editMode){
+      const renameCell = tr.querySelector('[data-rename]');
+      if(renameCell){
+        renameCell.addEventListener('dblclick',(e)=>{
+          e.stopPropagation();
+          const field = renameCell.dataset.rename;
+          const val = prompt('Rename', row[field]);
+          if(val && val.trim()){ db.run(`UPDATE ${key} SET ${field}=? WHERE id=?`,[val.trim(), id]); persist(); renderTrackerTab(key,p); }
+        });
+      }
+      const delBtn = tr.querySelector('[data-del]');
+      if(delBtn) delBtn.addEventListener('click',(e)=>{
         e.stopPropagation();
-        const field = renameCell.dataset.rename;
-        const val = prompt('Rename', row[field]);
-        if(val && val.trim()){ db.run(`UPDATE ${key} SET ${field}=? WHERE id=?`,[val.trim(), id]); persist(); renderTrackerTab(key,p); }
+        if(confirm("Delete this item? This can't be undone.")){ db.run(`DELETE FROM ${key} WHERE id=?`,[id]); persist(); renderTrackerTab(key,p); }
       });
     }
-    tr.querySelector('[data-del]').addEventListener('click',(e)=>{
-      e.stopPropagation();
-      if(confirm("Delete this item? This can't be undone.")){ db.run(`DELETE FROM ${key} WHERE id=?`,[id]); persist(); renderTrackerTab(key,p); }
-    });
   });
-  $('#tab-body').querySelectorAll('tbody select.status-cell').forEach(sel=>{
-    sel.addEventListener('change', (e)=>{
-      e.stopPropagation();
-      const id = sel.closest('tr').dataset.id;
-      db.run(`UPDATE ${key} SET ${sel.dataset.f}=? WHERE id=?`,[sel.value, id]);
+  if(editMode){
+    $('#tab-body').querySelectorAll('tbody select.status-cell').forEach(sel=>{
+      sel.addEventListener('change', (e)=>{
+        e.stopPropagation();
+        const id = sel.closest('tr').dataset.id;
+        db.run(`UPDATE ${key} SET ${sel.dataset.f}=? WHERE id=?`,[sel.value, id]);
+        persist();
+      });
+      sel.addEventListener('click', e=>e.stopPropagation());
+    });
+    $('#row-add').addEventListener('click', ()=>{
+      const data = {};
+      $('#add-row').querySelectorAll('[data-f]').forEach(el=> data[el.dataset.f]=el.value);
+      if(!Object.values(data).some(v=>v && v.trim && v.trim())) return;
+      const keys = ['project_id', ...quickCols.map(c=>c.key)];
+      const vals = [p.id, ...quickCols.map(c=> data[c.key] || (c.type==='select'? getOptions(c.group)[0] : ''))];
+      db.run(`INSERT INTO ${key}(${keys.join(',')}) VALUES (${keys.map(()=>'?').join(',')})`, vals);
+      renderTrackerTab(key, p);
       persist();
     });
-    sel.addEventListener('click', e=>e.stopPropagation());
-  });
-  $('#row-add').addEventListener('click', ()=>{
-    const data = {};
-    $('#add-row').querySelectorAll('[data-f]').forEach(el=> data[el.dataset.f]=el.value);
-    if(!Object.values(data).some(v=>v && v.trim && v.trim())) return;
-    const keys = ['project_id', ...quickCols.map(c=>c.key)];
-    const vals = [p.id, ...quickCols.map(c=> data[c.key] || (c.type==='select'? getOptions(c.group)[0] : ''))];
-    db.run(`INSERT INTO ${key}(${keys.join(',')}) VALUES (${keys.map(()=>'?').join(',')})`, vals);
-    renderTrackerTab(key, p);
-    persist();
-  });
+  }
 }
 
 function openRowModal(key, cfg, row, p){
