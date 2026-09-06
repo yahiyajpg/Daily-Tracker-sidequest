@@ -284,12 +284,6 @@ PMO Tracker can be used for:
 
 PMO Tracker is an evolving side project focused on experimenting with a lightweight, browser-based approach to PMO and project work management.
 
-## Links
-
-**Live Application:** [Add live app link]
-
-**Repository:** [Add GitHub repository link]
-
 ## Author
 
 **Yahiya M.**
