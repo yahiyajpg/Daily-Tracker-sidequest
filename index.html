@@ -5,7 +5,7 @@
 <title>PMO Workspace</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/sql-wasm.js"></script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Fira+Code:wght@400;500;600;700&display=swap');
   :root{
     --bg:#0B1120; --panel:#121A2E; --panel2:#161F38; --panel3:#1C2745; --line:#232D48;
     --text:#E9EDF7; --sub:#8C96B0;
@@ -14,13 +14,28 @@
     --amber:#FBBF24;  --amber-soft:rgba(251,191,36,.14);
     --rose:#FB7185;   --rose-soft:rgba(251,113,133,.14);
     --emerald:#34D399;--emerald-soft:rgba(52,211,153,.14);
-    --sans:'Space Grotesk',sans-serif; --mono:'JetBrains Mono',monospace;
+    --sans:'Plus Jakarta Sans',sans-serif; --mono:'Fira Code',monospace;
+  }
+  html[data-theme="light"]{
+    --bg:#F4F5FA; --panel:#FFFFFF; --panel2:#F0F1F6; --panel3:#E6E8F0; --line:#DEE1EA;
+    --text:#161A22; --sub:#5B6472;
   }
   *{box-sizing:border-box;}
+  button,select,input,textarea,.proj-card,.navbtn,.sticky,.card-menu button,.opt-chip{transition:background .15s ease,border-color .15s ease,transform .1s ease;}
+  button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--violet);outline-offset:2px;}
+  .proj-card:active{transform:scale(.99);}
   body{margin:0;background:
     radial-gradient(1100px 500px at 90% -10%, rgba(139,92,246,.14), transparent 60%),
     radial-gradient(900px 500px at -10% 20%, rgba(56,189,248,.09), transparent 60%),
     var(--bg); color:var(--text); font-family:var(--sans);}
+  html[data-theme="light"] body{background:
+    radial-gradient(1100px 500px at 90% -10%, rgba(139,92,246,.08), transparent 60%),
+    radial-gradient(900px 500px at -10% 20%, rgba(56,189,248,.06), transparent 60%),
+    var(--bg);}
+  #corner-bar{position:fixed;top:14px;right:18px;display:flex;align-items:center;gap:10px;z-index:50;background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:6px 8px 6px 14px;box-shadow:0 4px 14px rgba(0,0,0,.15);}
+  #corner-bar .date{font-family:var(--mono);font-size:11.5px;color:var(--sub);}
+  #corner-bar #theme-toggle{all:unset;cursor:pointer;font-size:15px;line-height:1;padding:4px 6px;border-radius:8px;}
+  #corner-bar #theme-toggle:hover{background:var(--panel2);}
   #app{display:flex;min-height:100vh;}
 
   #side{width:210px;flex-shrink:0;background:var(--panel);border-right:1px solid var(--line);padding:20px 0;display:flex;flex-direction:column;}
@@ -35,7 +50,7 @@
   #proj-quick .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
   #side .bottom-nav{margin-top:auto;border-top:1px solid var(--line);padding-top:6px;}
 
-  main{flex:1;padding:28px 34px;max-width:1160px;}
+  main{flex:1;padding:54px 34px 28px;max-width:1160px;}
   .ph{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:10px;}
   .ph h1{font-size:22px;margin:0;font-weight:700;}
   .pill{display:inline-block;font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600;}
@@ -158,6 +173,10 @@
 </style>
 </head>
 <body>
+<div id="corner-bar">
+  <span class="date" id="corner-date"></span>
+  <button id="theme-toggle" title="Toggle light/dark mode">🌙</button>
+</div>
 <div id="app">
   <nav id="side">
     <div class="brand"><b id="brand-name">PMO Workspace</b><div class="sub">daily work, one place</div></div>
@@ -294,6 +313,7 @@ async function initDB(){
   alt(`CREATE TABLE IF NOT EXISTS settings(key TEXT PRIMARY KEY, value TEXT)`);
 
   currentProjectId = q('SELECT id FROM projects WHERE archived=0 ORDER BY id LIMIT 1')[0]?.id || null;
+  applyTheme(getSetting('theme','dark'));
   renderSidebar();
   renderMain();
 }
@@ -313,6 +333,17 @@ function q(sql, params=[]){
 function esc(s){ const d=document.createElement('div'); d.textContent=s??''; return d.innerHTML; }
 function getSetting(key, fallback){ const r = q('SELECT value FROM settings WHERE key=?',[key]); return r.length ? r[0].value : fallback; }
 function setSetting(key, value){ db.run('INSERT INTO settings(key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value',[key,value]); persist(); }
+function applyTheme(theme){
+  document.documentElement.setAttribute('data-theme', theme);
+  $('#theme-toggle').textContent = theme==='light' ? '☀' : '🌙';
+}
+$('#theme-toggle').addEventListener('click', ()=>{
+  const current = document.documentElement.getAttribute('data-theme') || 'dark';
+  const next = current === 'light' ? 'dark' : 'light';
+  applyTheme(next);
+  setSetting('theme', next);
+});
+$('#corner-date').textContent = new Date().toISOString().slice(0,10);
 function getOptions(group){
   const raw = getSetting('opts_'+group, null);
   if(raw){ try{ return JSON.parse(raw); }catch(e){} }
@@ -386,8 +417,8 @@ function renderMyDay(){
 
   $('#main').innerHTML = `
     <div id="greet">
-      <h1>${greeting()}, <span class="editable-name" id="edit-name" title="Click to edit">${esc(name)}</span> — let's get going ☕</h1>
-      <div class="sub">${today} · everything due soon or open, across all projects</div>
+      <h1>${greeting()}, <span class="editable-name" id="edit-name" title="Click to edit">${esc(name)}</span>. Let's get going ☕</h1>
+      <div class="sub">Everything due soon or open, across all projects</div>
     </div>
     <div class="stat-grid">
       <div class="stat-card"><div class="num">${projCount}</div><div class="lbl">active projects</div></div>
@@ -482,7 +513,7 @@ function renderSticky(){
   const notes = q('SELECT * FROM sticky_notes ORDER BY id DESC');
   $('#main').innerHTML = `
     <div class="ph"><h1>Sticky Notes</h1></div>
-    <p class="lede">Freeform quick-capture — reminders, ideas, things not worth a full tracker entry</p>
+    <p class="lede">Freeform quick-capture for reminders, ideas, and things not worth a full tracker entry</p>
     <div id="sticky-add">
       <textarea id="sticky-text" placeholder="Jot something down…"></textarea>
       <div class="swatch-pick" id="swatch-pick">
@@ -620,7 +651,7 @@ function openEditProjectModal(p){
   const catOpts = getOptions('project_category'), statusOpts = getOptions('project_status'), prioOpts = getOptions('project_priority');
   openModal(`
     <h2>Edit project</h2>
-    <div class="mlede">Change any field — nothing here needs code.</div>
+    <div class="mlede">Change any field. Nothing here needs code.</div>
     <div class="mfield"><label>Name</label><input id="ef-name" value="${esc(p.name)}"></div>
     <div class="mfield"><label>Description</label><textarea id="ef-desc">${esc(p.description)}</textarea></div>
     <div class="mrow2">
@@ -690,7 +721,7 @@ function renderProject(){
         <button class="menu-btn" id="proj-edit-btn" style="all:unset;cursor:pointer;color:var(--sub);font-size:16px;padding:2px 8px;border-radius:6px;">⋯</button>
       </div>
     </div>
-    <p class="lede">${esc(p.description||'')||'Project workspace — milestones, work items, requests, docs and RAID all in one place'}</p>
+    <p class="lede">${esc(p.description||'')||'Project workspace: milestones, work items, requests, docs and RAID all in one place'}</p>
     <div id="tabs">${tabDefs.map(([k,l])=>`<button data-tab="${k}" class="${k===currentTab?'active':''}">${l}</button>`).join('')}</div>
     <div id="tab-body"></div>
     <footer>SQLite in-browser · autosaves on every change</footer>
@@ -839,7 +870,7 @@ function openRowModal(key, cfg, row, p){
 function renderSettings(){
   $('#main').innerHTML = `
     <div class="ph"><h1>Settings</h1></div>
-    <p class="lede">Configure your workspace — types, statuses and priorities — without touching code.</p>
+    <p class="lede">Configure your workspace: types, statuses and priorities, all without touching code.</p>
     <div class="set-group">
       <h3>Workspace</h3>
       <div class="set-field"><label>Workspace name</label><input id="set-wsname" value="${esc(getSetting('workspace_name','PMO Workspace'))}"></div>
